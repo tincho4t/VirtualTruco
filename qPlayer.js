@@ -17,7 +17,9 @@ var QPlayer = function (name) {
 	var _cp = new CommonAPI.CardProcessor();
 	var _trucoLevel = 0;
 	var _gameState = 0;
-	var _Q = zeros_like(4+16+4*16+4*64+9*256, 8);
+	var _Q = zeros_like(4+16+4*16+4*64+9*256, 9);
+	var _round = 0; // Indica que numero de jugada vas, primera, segunda o tercera.
+	var _iHaveToPlay; // Indica si el que tiene q jugar la proxima carta soy yo o no.
 
 	var simplifyWeights = function(weight){
 		if(weight >= 11){ // 4 al 7
@@ -30,6 +32,58 @@ var QPlayer = function (name) {
 			return 3;
 		}
 	}
+
+	var getStateIndex = function(trucoLevel, gameState){
+		return _mappedCardList[0] * 1 +     // 4^0
+				_mappedCardList[1] * 4 +    // 4^1
+				_mappedCardList[2] * 16 +   // 4^2
+				trucoLevel * 64 + // 4^3
+				gameState * 256;  // 4^4
+	}
+
+	var actionToColumIndex = function(nodeName){
+		var options = {
+			//"EstadoFinal": 0 Es el estado absorvente. Indica un estado final.
+			"Truco": 1,
+			"ReTruco": 2,
+			"ValeCuatro": 3,
+			"Quiero": 4,
+			"NoQuiero": 5,
+			"PlayCardHigh": 6,
+			"PlayCardLow": 7,
+			"PlayCardMiddle": 8,
+			"PostScore": 9,
+			"SonBuenas": 10,
+			"Envido": 11,
+			"RealEnvido": 12,
+			"FaltaEnvido": 13,
+			"GoToDeck": 14
+		}
+
+		return options[nodeName];
+	}
+
+	var columIndexToAction = function(index){
+		var options = {
+			1:"Truco",
+			2:"ReTruco",
+			3:"ValeCuatro",
+			4:"Quiero",
+			5:"NoQuiero",
+			6:"PlayCardHigh",
+			7:"PlayCardLow",
+			8:"PlayCardMiddle",
+			9:"PostScore",
+			10:"SonBuenas",
+			11:"Envido",
+			12:"RealEnvido",
+			13:"FaltaEnvido",
+			14:"GoToDeck"
+		}
+
+		return options[index];
+	}
+	
 	/**
 	 * Devuelve las cartas mapeadas
 	 * a la simplificacion de estados
@@ -45,13 +99,17 @@ var QPlayer = function (name) {
 
 	var useCard = function(action){
 		var orderedCards = _cardSet.getWinnerCards();
-		if(action=="PlayCardHigh"){
-			card = orderedCards[0];
-		}else if(action=="PlayCardMiddle"){
-			card = orderedCards[1];
-		}else{
-			card = orderedCards[orderedCards.length-1];
+		switch(action) {
+			case "PlayCardHigh":
+				card = orderedCards[0];
+				break;
+			case "PlayCardMiddle":
+				card = orderedCards[1];
+				break;
+			default:
+				card = orderedCards[orderedCards.length-1];
 		}
+
 		_cardSet.pullCard(card);
 		return(card);
 	}
@@ -94,6 +152,59 @@ var QPlayer = function (name) {
 			}
 		}
 		return(columIndexToAction(maxCol))
+	}
+
+	/** Podes ganar perder o empardar **/
+		var getNextStatesIfOpponentHaveToPlay = function(trucoLevel){
+			//TODO:
+			return [];
+		}
+
+	var getNextsStates = function(stateIndex, actionIndex){
+		var states = [];
+		switch (actionIndex){
+			case 0: // Es estado final -> Me quedo en el mismo estado
+				states.push(stateIndex);
+				break;
+			case 5: // No quiero -> Perdi
+				states.push(getStateIndex(_trucoLevel, 8));
+				break;
+			case 1: // Cantar Truco
+			case 2: // Catar Quiero Retruco
+				if(!_iHaveToPlay){
+					states.push(getStateIndex(_trucoLevel + 1, _gameState)); // Por mas que le toque jugar a el todavia puede subirme el truco.
+				}
+				// No esta el break a proposito.
+			case 3: // Cantar Quiero vale cuatro
+				states.push(getStateIndex(_trucoLevel, 7)); // Gano xq no quiere.
+				
+				// Si acepta:
+				if(_iHaveToPlay){
+					states.push(getStateIndex(_trucoLevel + 1, _gameState)); // Aceptar o subir concretan la subida del trucoLevel.
+				} else { 
+					states.concat(getNextStatesIfOpponentHaveToPlay(_trucoLevel + 1));
+				}
+				
+				break;
+			case 4: // Quiero
+				if(_iHaveToPlay){
+					//TODO:
+				} else {
+					states.concat(getNextStatesIfOpponentHaveToPlay(_trucoLevel));
+				}
+
+
+
+		}
+/*
+		//"EstadoFinal": 0 Es el estado absorvente. Indica un estado final.
+			"Quiero": 4,
+			"PlayCardHigh": 6,
+			"PlayCardLow": 7,
+			"PlayCardMiddle": 8
+			*/
+		return states;
+
 	}
 
 	var updateGameState = function(state){
@@ -143,12 +254,19 @@ var QPlayer = function (name) {
 		}
 	}
 
-	var getIndex = function(){
-		return _mappedCardList[0] * 1 +     // 4^0
-				_mappedCardList[1] * 4 +    // 4^1
-				_mappedCardList[2] * 16 +   // 4^2
-				_trucoLevel * 64 + // 4^3
-				_gameState * 256;  // 4^4
+	var updateIHaveToPlay = function(options){
+		if(_iHaveToPlay) return; // Si me tocaba jugar antes no valido
+		
+		// Si no me tocaba y me dan la opcion de No Querer es xq me cantaron algo y todavia no es mi turno.
+		haveToPlay = true;
+		options.each(function (nodeName, node) {
+			if(nodeName=="NoQuiero"){ // Si me cantaron tanto lo rechazo.
+				if(node.name=="SecondSectionNoQuiero"){
+					haveToPlay = false;
+				}
+			}
+		});
+		_iHaveToPlay = haveToPlay;
 	}
 
 	var getRandomOption = function (opts) {
@@ -159,7 +277,7 @@ var QPlayer = function (name) {
 		var action = null;
 		var nodeNames = [];
 		options.each(function (nodeName, node) {
-			if(nodeName=="NoQuiero"){
+			if(nodeName=="NoQuiero"){ // Si me cantaron tanto lo rechazo.
 				if(node.name=="FirstSectionNoQuiero"){
 					action = new Server.Action(Server.ActionType.Message, Server.Messages[CommonAPI.NO_QUIERO]);
 				}
@@ -173,7 +291,7 @@ var QPlayer = function (name) {
 		}
 
 		indexes = actionsNodesToMatrixColumIndexes(nodeNames);
-		state = getIndex();
+		state = getStateIndex(_trucoLevel, _gameState);
 		bestAction = getBestQAction(state, indexes);
 		if(bestAction.includes("Play")) {
 		   card = useCard(bestAction);
@@ -183,48 +301,6 @@ var QPlayer = function (name) {
 		   action = new Server.Action(Server.ActionType.Message, Server.Messages[bestAction]);
 		}
 		return action;
-	}
-
-	var actionToColumIndex = function(nodeName){
-		var options = {
-			"Truco": 0,
-			"ReTruco": 1,
-			"ValeCuatro": 2,
-			"Quiero": 3,
-			"NoQuiero": 4,
-			"PlayCardHigh": 5,
-			"PlayCardLow": 6,
-			"PlayCardMiddle": 7,
-			"PostScore": 8,
-			"SonBuenas": 9,
-			"Envido": 10,
-			"RealEnvido": 11,
-			"FaltaEnvido": 12,
-			"GoToDeck": 13
-		}
-
-		return options[nodeName];
-	}
-
-	var columIndexToAction = function(index){
-		var options = {
-			0:"Truco",
-			1:"ReTruco",
-			2:"ValeCuatro",
-			3:"Quiero",
-			4:"NoQuiero",
-			5:"PlayCardHigh",
-			6:"PlayCardLow",
-			7:"PlayCardMiddle",
-			8:"PostScore",
-			9:"SonBuenas",
-			10:"Envido",
-			11:"RealEnvido",
-			12:"FaltaEnvido",
-			13:"GoToDeck"
-		}
-
-		return options[index];
 	}
 
 
@@ -261,6 +337,8 @@ var QPlayer = function (name) {
 		loadMappedCards();
 		_trucoLevel = 0;
 		_gameState = 0;
+		_round = 0;
+		_iHaveToPlay = event.hasHand;
 	});
 	this.addEventListener("handEnd", function (event) {
 		// event.cardShowing
@@ -268,9 +346,12 @@ var QPlayer = function (name) {
 
 	this.addEventListener("roundEnds", function (event) {
 		updateGameState(event.state);
+		_iHaveToPlay = state == "win";
+		_round++;
 	});
 	this.addEventListener("play", function (event) {
 		updateTrucoLevel(event.options);
+		updateIHaveToPlay(event.options);
 
 		var action = getAction(event.options);
 
