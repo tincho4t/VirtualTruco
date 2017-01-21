@@ -813,22 +813,22 @@ var Server = new function () {
 
 			switch(result) {
 				case CommonAPI.CompareWeightType.Lower:
-					_player1.handler.fireEvent("handInit", {state: "lose"});
-					_player2.handler.fireEvent("handInit", {state: "win"});
+					player1.handler.fireEvent("roundEnds", {state: "lose"});
+					player2.handler.fireEvent("roundEnds", {state: "win"});
 					player2.trucoCycle.score += points;
 					_nextPlayer = player2;
 					break;
 				case CommonAPI.CompareWeightType.Equal:
 					player1.trucoCycle.score += points;
 					player2.trucoCycle.score += points;
-					_player1.handler.fireEvent("handInit", {state: "tie"});
-					_player2.handler.fireEvent("handInit", {state: "tie"});
+					player1.handler.fireEvent("roundEnds", {state: "tie"});
+					player2.handler.fireEvent("roundEnds", {state: "tie"});
 					_nextPlayer = playerManager.getHandPlayer();
 					break;
 				case CommonAPI.CompareWeightType.Higher:
 					player1.trucoCycle.score += points;
-					_player1.handler.fireEvent("handInit", {state: "win"});
-					_player2.handler.fireEvent("handInit", {state: "lose"});
+					player1.handler.fireEvent("roundEnds", {state: "win"});
+					player2.handler.fireEvent("roundEnds", {state: "lose"});
 					_nextPlayer = player1;
 					break;
 			}
@@ -1216,4 +1216,4 @@ var Server = new function () {
 }
 
 // new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), new QPlayer("Q-learning"));
-new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), new RandomPlayer("Q-learning"));
+new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), new QPlayer("Q-learning"));

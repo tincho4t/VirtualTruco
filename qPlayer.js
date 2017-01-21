@@ -10,6 +10,7 @@ var zeros_like = function(n, m){
 var QPlayer = function (name) {
 	CommonAPI.AbstractPlayer.call(this);
 
+	var _initialCardSet = [];
 	var _cardSet = [];
 	var _mappedCardList = [];
 	var _utils = new Utils();
@@ -36,10 +37,23 @@ var QPlayer = function (name) {
 	 * independientmente si ya se jugaron o no
 	 **/
 	var loadMappedCards = function(){
-		_mappedCardList.push(simplifyWeights(cp.getCardWeight(_cardSet.getCard1())));
-		_mappedCardList.push(simplifyWeights(cp.getCardWeight(_cardSet.getCard2())));
-		_mappedCardList.push(simplifyWeights(cp.getCardWeight(_cardSet.getCard3())));
+		_mappedCardList.push(simplifyWeights(_cp.getCardWeight(_initialCardSet.getCard1())));
+		_mappedCardList.push(simplifyWeights(_cp.getCardWeight(_initialCardSet.getCard2())));
+		_mappedCardList.push(simplifyWeights(_cp.getCardWeight(_initialCardSet.getCard3())));
 		_mappedCardList.sort(); // Las ordenamos porque por mas que teoricamente sea lo mismo nos va a converger mas rapido.
+	}
+
+	var useCard = function(action){
+		var orderedCards = _cardSet.getWinnerCards();
+		if(action=="PlayCardHigh"){
+			card = orderedCards[0];
+		}else if(action=="PlayCardMiddle"){
+			card = orderedCards[1];
+		}else{
+			card = orderedCards[orderedCards.length-1];
+		}
+		_cardSet.pullCard(card);
+		return(card);
 	}
 
 	var updateTrucoLevel = function(actions){
@@ -61,6 +75,25 @@ var QPlayer = function (name) {
 		});
 
 		_trucoLevel = trucoLevel;
+	}
+
+	var getBestQAction = function(row, columns){
+		//TODO: Esto esta mal, solamente devuelve la mejor accion actual dado mi estado. Osea no aprende.
+		// En realidad deberia explorar alguna accion possible de este estado actual, osea alguna de las columnas que recibe (no tiene que ser la mejor)
+		// Luego tenemos que calcular a que nueva row nos llevaria esa columna si la "tomamos", en ese nuevo estado(row) calcular el maximo
+		// valor de _Q[nueva_row]
+		// Luego actualizamos _Q[row_actual][columna_elegida] += learning_rate * maximo(_Q[nueva_row])
+		maxCol = 0;
+		maxColValue = -99999;
+		for(col=0;col<columns.length;col++){
+			currentColumn = columns[col]
+			currentValue = _Q[row][currentColumn]
+			if(currentValue > maxColValue){
+				maxCol = currentColumn
+				maxColValue = currentValue
+			}
+		}
+		return(columIndexToAction(maxCol))
 	}
 
 	var updateGameState = function(state){
@@ -123,23 +156,33 @@ var QPlayer = function (name) {
 	}
 
 	var getAction = function (options) {
-		//TODO: COMPLETAR ESTA FUNCION
-
-		event.options.each(function (nodeName, node) {
-			if(!nodeName.includes("Envido")) {
-				_allMyOptions.push(node);
+		var action = null;
+		var nodeNames = [];
+		options.each(function (nodeName, node) {
+			if(nodeName=="NoQuiero"){
+				if(node.name=="FirstSectionNoQuiero"){
+					action = new Server.Action(Server.ActionType.Message, Server.Messages[CommonAPI.NO_QUIERO]);
+				}
+			}
+			if(!nodeName.includes("Envido")){
+				nodeNames.push(nodeName);				
 			}
 		});
+		if(action){
+			return(action);
+		}
 
-		
-		// var action;
-		// if(randOption==CommonAPI.PLAY_CARD) {
-		// 	action = new Server.Action(Server.ActionType.Card, _cardSet.getNextCard());
-		// }
-		// else {
-		// 	action = new Server.Action(Server.ActionType.Message, Server.Messages[randOption]);
-		// }
-		// return action;
+		indexes = actionsNodesToMatrixColumIndexes(nodeNames);
+		state = getIndex();
+		bestAction = getBestQAction(state, indexes);
+		if(bestAction.includes("Play")) {
+		   card = useCard(bestAction);
+		   action = new Server.Action(Server.ActionType.Card, card);
+		}
+		else {
+		   action = new Server.Action(Server.ActionType.Message, Server.Messages[bestAction]);
+		}
+		return action;
 	}
 
 	var actionToColumIndex = function(nodeName){
@@ -160,29 +203,50 @@ var QPlayer = function (name) {
 			"GoToDeck": 13
 		}
 
-		return options[nodesName];
+		return options[nodeName];
+	}
+
+	var columIndexToAction = function(index){
+		var options = {
+			0:"Truco",
+			1:"ReTruco",
+			2:"ValeCuatro",
+			3:"Quiero",
+			4:"NoQuiero",
+			5:"PlayCardHigh",
+			6:"PlayCardLow",
+			7:"PlayCardMiddle",
+			8:"PostScore",
+			9:"SonBuenas",
+			10:"Envido",
+			11:"RealEnvido",
+			12:"FaltaEnvido",
+			13:"GoToDeck"
+		}
+
+		return options[index];
 	}
 
 
 	// Dada las acciones disponibles devuelve un array con los numeros que le corresponden
 	// Si es PlayCard lo splitea en 3, uno para cada posible carta.
-	var actionsNodesToMatrixColumIndexes = function(nodesNames){
+	var actionsNodesToMatrixColumIndexes = function(nodeNames){
 
 		// Cambio PlayCard por PlayCard High, Middle y Low
-		var playCardIndex = nodesNames.includes("PlayCard");
+		var playCardIndex = nodeNames.indexOf("PlayCard");
 		if(playCardIndex > -1){
-			nodesNames.splice(playCardIndex, 1);
-			nodesNames.push("PlayCardHigh");
-			if(this.getCardSet().length > 1 ){
-				nodesNames.push("PlayCardLow");
+			nodeNames.splice(playCardIndex, 1);
+			nodeNames.push("PlayCardHigh");
+			if(_cardSet.getCount() > 1 ){
+				nodeNames.push("PlayCardLow");
 			}
-			if(this.getCardSet().length > 2 ){
-				nodesNames.push("PlayCardMiddle");
+			if(_cardSet.getCount() > 2 ){
+				nodeNames.push("PlayCardMiddle");
 			}
 		}
 
 		var indexes = [];
-		nodesNames.each(function(name){
+		nodeNames.forEach(function(name){
 			indexes.push(actionToColumIndex(name));
 		});
 
@@ -193,6 +257,7 @@ var QPlayer = function (name) {
 
 	this.addEventListener("handInit", function (event) {
 		_cardSet = this.getCardSet();
+		_initialCardSet = this.getCardSet();
 		loadMappedCards();
 		_trucoLevel = 0;
 		_gameState = 0;
