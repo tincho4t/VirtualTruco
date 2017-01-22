@@ -18,8 +18,10 @@ var QPlayer = function (name) {
 	var _trucoLevel = 0;
 	var _gameState = 0;
 	var _Q = zeros_like(4+16+4*16+4*64+9*256, 9);
+	var _roundActions = []; //Array de tuplas con las celdas de _Q que se usaron
 	var _round = 0; // Indica que numero de jugada vas, primera, segunda o tercera.
 	var _iHaveToPlay; // Indica si el que tiene q jugar la proxima carta soy yo o no.
+	var _exploreProbability = 0.1 //Probabilidad de explorar
 
 	var simplifyWeights = function(weight){
 		if(weight >= 11){ // 4 al 7
@@ -34,11 +36,12 @@ var QPlayer = function (name) {
 	}
 
 	var getStateIndex = function(trucoLevel, gameState){
-		return _mappedCardList[0] * 1 +     // 4^0
-				_mappedCardList[1] * 4 +    // 4^1
-				_mappedCardList[2] * 16 +   // 4^2
-				trucoLevel * 64 + // 4^3
-				gameState * 256;  // 4^4
+		var result =_mappedCardList[0] * 1 +     // 4^0
+					_mappedCardList[1] * 4 +    // 4^1
+					_mappedCardList[2] * 16 +   // 4^2
+					trucoLevel * 64 + // 4^3
+					gameState * 256;  // 4^4
+		return(result)
 	}
 
 	var actionToColumIndex = function(nodeName){
@@ -135,30 +138,39 @@ var QPlayer = function (name) {
 		_trucoLevel = trucoLevel;
 	}
 
+	var updateQ = function(points){
+		pointsPerAction = points/_roundActions.length
+		//console.log("Distributing "+ pointsPerAction)
+		_roundActions.forEach(function(tuple){
+			_Q[tuple[0]][tuple[1]] += pointsPerAction
+		})
+	}
+
+	var markStateActionTaken = function(row, column){
+		_roundActions.push([row, column])
+	}
+
 	var getBestQAction = function(row, columns){
-		//TODO: Esto esta mal, solamente devuelve la mejor accion actual dado mi estado. Osea no aprende.
-		// En realidad deberia explorar alguna accion possible de este estado actual, osea alguna de las columnas que recibe (no tiene que ser la mejor)
-		// Luego tenemos que calcular a que nueva row nos llevaria esa columna si la "tomamos", en ese nuevo estado(row) calcular el maximo
-		// valor de _Q[nueva_row]
-		// Luego actualizamos _Q[row_actual][columna_elegida] += learning_rate * maximo(_Q[nueva_row])
 		maxCol = 0;
 		maxColValue = -99999;
 		for(col=0;col<columns.length;col++){
 			currentColumn = columns[col]
 			currentValue = _Q[row][currentColumn]
-			if(currentValue > maxColValue){
+			explore = ((_utils.random(1, 100)/100)) < _exploreProbability
+			if(currentValue > maxColValue || explore){
 				maxCol = currentColumn
 				maxColValue = currentValue
 			}
 		}
+		markStateActionTaken(row, maxCol)
 		return(columIndexToAction(maxCol))
 	}
 
 	/** Podes ganar perder o empardar **/
-		var getNextStatesIfOpponentHaveToPlay = function(trucoLevel){
-			//TODO:
-			return [];
-		}
+	var getNextStatesIfOpponentHaveToPlay = function(trucoLevel){
+		//TODO:
+		return [];
+	}
 
 	var getNextsStates = function(stateIndex, actionIndex){
 		var states = [];
@@ -303,6 +315,17 @@ var QPlayer = function (name) {
 		return action;
 	}
 
+	var countZeros = function(m){
+		total = 0
+		for(i=0;i<m[0].length;i++){
+			for(j=0;j<m.length;j++){
+				if(m[j][i]==0){
+					total++;
+				}
+			}
+		}
+		return(total)
+	}
 
 	// Dada las acciones disponibles devuelve un array con los numeros que le corresponden
 	// Si es PlayCard lo splitea en 3, uno para cada posible carta.
@@ -338,10 +361,11 @@ var QPlayer = function (name) {
 		_trucoLevel = 0;
 		_gameState = 0;
 		_round = 0;
+		_roundActions = [];
 		_iHaveToPlay = event.hasHand;
 	});
-	this.addEventListener("handEnd", function (event) {
-		// event.cardShowing
+	this.addEventListener("handFinished", function (event) {
+		updateQ(event.points);
 	});
 
 	this.addEventListener("roundEnds", function (event) {

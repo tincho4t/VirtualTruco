@@ -728,7 +728,7 @@ var Server = new function () {
 			_currentPlayer = player;
 			_childNodes = _currentNode.getChildNodes(player.state);
 			if(_childNodes.isEmpty()) {
-				cardProcessor.closeHand(player);
+				cardProcessor.closeHand(player, playerManager.getOpponent(player));
 			}
 		}
 		this.getActions = function () {
@@ -834,17 +834,21 @@ var Server = new function () {
 			}
 		}
 		
+
 		var evalWinner = function (player1, player2) {
 			var max = Math.max(player1.trucoCycle.score, player2.trucoCycle.score);
 			if(max >= 150) {
-				var player = player1.trucoCycle.score==max? player1: player2;
-				setWinner(player);
+				var playerWinner = player1.trucoCycle.score==max? player1: player2;
+				var playerLooser = player2.trucoCycle.score==max? player1: player2;
+				setWinner(playerWinner, playerLooser);
 				_nextPlayer = null;
 			}
 		}
 		
-		var setWinner = function (player) {
+		var setWinner = function (player, playerLooser) {
 			Log.add({"Gano segunda parte": player.handler.getName()});
+			playerLooser.trucoCycle.winner = false;
+			player.trucoCycle.winner = true;
 			player.pointsEarned += pointTracker.getSecondSectionPoints().getValue(player);
 			_lastPlayer = null;
 		}
@@ -872,8 +876,8 @@ var Server = new function () {
 			}
 		}
 		
-		this.closeHand = function (player) {
-			setWinner(player);
+		this.closeHand = function (playerWinner, playerLooser) {
+			setWinner(playerWinner, playerLooser);
 		}
 		
 		this.getNextPlayer = function () {
@@ -915,6 +919,7 @@ var Server = new function () {
 		this.pointsEarned = 0;
 		this.isHand = false;
 		this.cards = [];
+		this.totalWon = [];
 
 		
 		/*
@@ -1074,8 +1079,8 @@ var Server = new function () {
 	
 	this.GameConfig = function (name) {
 		this.name = name;
-		this.playRate = 500;
-		this.maxScore = 300;
+		this.playRate = 10;
+		this.maxScore = 30000;
 	}
 	
 	this.GameManager = function (config, playerHandler1, playerHandler2) {
@@ -1091,6 +1096,40 @@ var Server = new function () {
 		var _runner;
 		var _interval;
 		
+		var setQLearnPoints = function(pointTracker, player1, player2){
+			if(typeof player1.trucoCycle.winner!='undefined'){
+				var getSum = function(a){
+					var res=0;
+					for(i=0;i<a.length;i++){
+						if(a[i]){
+							res++;
+						}
+					}
+					return(res)
+				}	
+				
+				trucoPoints = pointTracker.getSecondSectionPoints().getValue(player1);
+				if(player1.trucoCycle.winner){
+					p1Qlearn = trucoPoints
+					p2Qlearn = -trucoPoints
+				}else{
+					p1Qlearn = -trucoPoints
+					p2Qlearn = trucoPoints
+				}
+				player1.handler.fireEvent("handFinished", {points: p1Qlearn});
+				player2.handler.fireEvent("handFinished", {points: p2Qlearn});
+				player1.totalWon.push(player1.trucoCycle.winner)
+				if(player1.totalWon.length > 100){
+					player1.totalWon.splice(0, 1)
+				}			
+				player2.totalWon.push(player2.trucoCycle.winner)
+				if(player2.totalWon.length > 100){
+					player2.totalWon.splice(0, 1)
+				}
+				console.log("Last 100 Wins = "+getSum(player1.totalWon)+" "+getSum(player2.totalWon));
+			}
+		}
+
 		// temp
 		var showLog = function () {
 			var log = {};
@@ -1099,6 +1138,9 @@ var Server = new function () {
 			log["--" + _player2.handler.getName()] = _player2.pointsEarned + (_player2.isHand? "": " (hand player)");
 			Log.add(log);
 			Log.add({"-----------------------": "------------------------------<br>"});
+			if(_pointCount){
+				setQLearnPoints(_pointCount, _player1, _player2)
+			}
 		}
 		
 		var init = function () {
@@ -1127,7 +1169,7 @@ var Server = new function () {
 		var getGameName = function () {
 			return config.name + " - " + playerHandler1.getName() + " VS. " + playerHandler2.getName();
 		}
-		
+
 		var nextHand = function () {
 			
 			// temp
@@ -1216,4 +1258,4 @@ var Server = new function () {
 }
 
 // new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), new QPlayer("Q-learning"));
-new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), new QPlayer("Q-learning"));
+new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new QPlayer("Q-learning1"), new QPlayer("Q-learning2"));
