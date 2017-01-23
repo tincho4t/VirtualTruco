@@ -1258,4 +1258,4 @@ var Server = new function () {
 }
 
 // new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), new QPlayer("Q-learning"));
-new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new QPlayer("Q-learning1"), new QPlayer("Q-learning2"));
+new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new QPlayer("QPlayer 1"), new QPlayer("Q-learning2"));

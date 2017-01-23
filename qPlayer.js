@@ -21,7 +21,7 @@ var QPlayer = function (name) {
 	var _roundActions = []; //Array de tuplas con las celdas de _Q que se usaron
 	var _round = 0; // Indica que numero de jugada vas, primera, segunda o tercera.
 	var _iHaveToPlay; // Indica si el que tiene q jugar la proxima carta soy yo o no.
-	var _exploreProbability = 0.1 //Probabilidad de explorar
+	var _exploreProbability = 0.3 //Probabilidad de explorar
 
 	var simplifyWeights = function(weight){
 		if(weight >= 11){ // 4 al 7
@@ -327,6 +327,28 @@ var QPlayer = function (name) {
 		return(total)
 	}
 
+	var getRowString = function(i){
+		res = "Row (" + i +") -> ";
+		for(j=0;j<_Q[i].length;j++){
+			actionString = columIndexToAction(j);
+			res = res + actionString + ": " + Math.round(_Q[i][j], 2) + " ";
+		}
+		return(res);
+	}
+
+	var showQ = function(){
+		console.log("-------------- Q MATRIX ---------------");
+		console.log("Amount of unreached cells: "+countZeros(_Q));
+		n = _Q.length-1;
+		middle = Math.round(n/2);
+		rowString = getRowString(n);
+		console.log(rowString);
+		rowString = getRowString(middle);
+		console.log(rowString);
+		rowString = getRowString(0);
+		console.log(rowString);
+	}
+
 	// Dada las acciones disponibles devuelve un array con los numeros que le corresponden
 	// Si es PlayCard lo splitea en 3, uno para cada posible carta.
 	var actionsNodesToMatrixColumIndexes = function(nodeNames){
@@ -363,6 +385,9 @@ var QPlayer = function (name) {
 		_round = 0;
 		_roundActions = [];
 		_iHaveToPlay = event.hasHand;
+		if(_utils.random(1,100)>95){
+			showQ();
+		}
 	});
 	this.addEventListener("handFinished", function (event) {
 		updateQ(event.points);
