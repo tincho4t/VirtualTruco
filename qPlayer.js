@@ -151,22 +151,27 @@ var QPlayer = function (name) {
 	}
 
 	var getBestQAction = function(row, columns){
-		maxCol = 0;
-		maxColValue = -99999;
-		for(col=0;col<columns.length;col++){
-			currentColumn = columns[col]
-			currentValue = _Q[row][currentColumn]
-			explore = ((_utils.random(1, 100)/100)) < _exploreProbability
-			if(currentValue > maxColValue || explore){
-				maxCol = currentColumn
-				maxColValue = currentValue
+		var maxCol = 0;
+		var maxColValue = -99999;
+		var explore = ((_utils.random(1, 100)/100)) < _exploreProbability
+		if(explore){
+			maxCol = getRandomOption(columns)
+		} else {
+			for(col=0;col<columns.length;col++){
+				currentColumn = columns[col]
+				currentValue = _Q[row][currentColumn]
+				if(currentValue > maxColValue){
+					maxCol = currentColumn
+					maxColValue = currentValue
+				}
 			}
 		}
 		markStateActionTaken(row, maxCol)
 		return(columIndexToAction(maxCol))
 	}
 
-	/** Podes ganar perder o empardar **/
+/*
+	//Podes ganar perder o empardar
 	var getNextStatesIfOpponentHaveToPlay = function(trucoLevel){
 		//TODO:
 		return [];
@@ -208,17 +213,17 @@ var QPlayer = function (name) {
 
 
 		}
-/*
+
 		//"EstadoFinal": 0 Es el estado absorvente. Indica un estado final.
 			"Quiero": 4,
 			"PlayCardHigh": 6,
 			"PlayCardLow": 7,
 			"PlayCardMiddle": 8
-			*/
+			
 		return states;
 
 	}
-
+*/
 	var updateGameState = function(state){
 		//0: NADA
 		//1: GANE_1
