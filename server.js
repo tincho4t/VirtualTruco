@@ -1215,7 +1215,7 @@ var Server = new function () {
 				_handHistory.close();
 			}
 			clearInterval(_interval);
-			sendGameData();
+			//sendGameData(); Anule el send
 		}
 		
 		var receiveAction = function (action) {
@@ -1224,6 +1224,8 @@ var Server = new function () {
 					
 			if(isMaxScore(config.maxScore)) {
 				endGame();
+				// TERMINO EL PARTIDO. SALGO DE LA RECURSION!!!!!!!!
+				return;
 			}
 			else if(!currentHand) {
 				nextHand();
