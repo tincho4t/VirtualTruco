@@ -416,4 +416,8 @@ var QPlayer = function (name) {
 
 		this.postAction(action);
 	});
+
+	this.getQ = function(){
+		return _Q;
+	}
 }

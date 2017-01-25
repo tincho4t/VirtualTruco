@@ -1109,6 +1109,7 @@ var Server = new function () {
 				}	
 				
 				trucoPoints = pointTracker.getSecondSectionPoints().getValue(player1);
+				var p1Qlearn, p2Qlearn;
 				if(player1.trucoCycle.winner){
 					p1Qlearn = trucoPoints
 					p2Qlearn = -trucoPoints
@@ -1171,7 +1172,7 @@ var Server = new function () {
 		}
 
 		var nextHand = function () {
-			
+			Log.clear();
 			// temp
 			showLog();
 			
@@ -1256,6 +1257,6 @@ var Server = new function () {
 		
 	}
 }
-
+p2 = new QPlayer("Q-learning2");
 // new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), new QPlayer("Q-learning"));
-new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new QPlayer("QPlayer 1"), new QPlayer("Q-learning2"));
+new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new QPlayer("QPlayer 1"), p2);

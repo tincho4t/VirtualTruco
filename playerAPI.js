@@ -53,7 +53,8 @@ var HTTPLoader = function(url, method, scope, func){
 
 
 var Log = new function () {
-    var _output = document.createElement("div");    
+	var MAX_LENGTH = 100;
+    var _output = document.createElement("div");
     _output.style.fontFamily = "Courier New";
     _output.style.fontSize   = "11px";
     document.body.appendChild(_output);
@@ -73,11 +74,19 @@ var Log = new function () {
         for(var i in line) {
             str += i + ": " + addColumn(line[i]);
         }
-        _output.innerHTML += str + "<br>";
+        var entry = document.createElement("div")
+        entry.innerHTML = str;
+        _output.appendChild(entry);
     }
 
     this.save = function(p1,p2){        
              
+    }
+
+    this.clear = function() {
+		while (_output.childNodes.length > MAX_LENGTH) {
+		    _output.removeChild(_output.firstChild);
+		}
     }
 }
 
