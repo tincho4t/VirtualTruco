@@ -22,6 +22,11 @@ var QPlayer = function (name) {
 	var _round = 0; // Indica que numero de jugada vas, primera, segunda o tercera.
 	var _iHaveToPlay; // Indica si el que tiene q jugar la proxima carta soy yo o no.
 	var _exploreProbability = 0.3 //Probabilidad de explorar
+	var _learnEnable = true;
+
+	this.changeLearnStatus = function(l){
+		_learnEnable = l;
+	}
 
 	var simplifyWeights = function(weight){
 		if(weight >= 11){ // 4 al 7
@@ -68,6 +73,7 @@ var QPlayer = function (name) {
 
 	var columIndexToAction = function(index){
 		var options = {
+			0:"EstadoFinal",
 			1:"Truco",
 			2:"ReTruco",
 			3:"ValeCuatro",
@@ -139,11 +145,13 @@ var QPlayer = function (name) {
 	}
 
 	var updateQ = function(points){
-		pointsPerAction = points/_roundActions.length
-		//console.log("Distributing "+ pointsPerAction)
-		_roundActions.forEach(function(tuple){
-			_Q[tuple[0]][tuple[1]] += pointsPerAction
-		})
+		if(_learnEnable){
+			pointsPerAction = points/_roundActions.length
+			//console.log("Distributing "+ pointsPerAction)
+			_roundActions.forEach(function(tuple){
+				_Q[tuple[0]][tuple[1]] += pointsPerAction
+			})
+		}
 	}
 
 	var markStateActionTaken = function(row, column){
@@ -154,7 +162,7 @@ var QPlayer = function (name) {
 		var maxCol = 0;
 		var maxColValue = -99999;
 		var explore = ((_utils.random(1, 100)/100)) < _exploreProbability
-		if(explore){
+		if(_learnEnable && explore){ // Si no estoy aprendiendo no exploro, simplemente sigo lo que ya aprendi.
 			maxCol = getRandomOption(columns)
 		} else {
 			for(col=0;col<columns.length;col++){
@@ -332,6 +340,33 @@ var QPlayer = function (name) {
 		return(total)
 	}
 
+	var countUnreachedRows = function(m){
+		total = 0;
+		for(i=0;i<m.length;i++){
+			var unreached = true;
+			for(j=0;j<m[0].length;j++){
+				if(m[i][j]!=0){
+					unreached = false;
+					break;
+				}
+			}
+			if(unreached){
+				total++;
+			}
+		}
+		return(total);
+	}
+
+	var sumTotal = function(m){
+		total = 0
+		for(i=0;i<m[0].length;i++){
+			for(j=0;j<m.length;j++){
+				total += m[j][i];
+			}
+		}
+		return(total)
+	}
+
 	var getRowString = function(i){
 		res = "Row (" + i +") -> ";
 		for(j=0;j<_Q[i].length;j++){
@@ -343,7 +378,9 @@ var QPlayer = function (name) {
 
 	var showQ = function(){
 		console.log("-------------- Q MATRIX ---------------");
+		console.log("Amount of unreached rows: "+countUnreachedRows(_Q));
 		console.log("Amount of unreached cells: "+countZeros(_Q));
+		console.log("Total of cells: "+sumTotal(_Q));
 		n = _Q.length-1;
 		middle = Math.round(n/2);
 		rowString = getRowString(n);
