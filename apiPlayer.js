@@ -13,6 +13,9 @@ var apiPlayer = function (name) {
 	var _gameState = 0;
 	var _round = 0; // Indica que numero de jugada vas, primera, segunda o tercera.
 	var _iHaveToPlay; // Indica si el que tiene q jugar la proxima carta soy yo o no.
+	var _maxScore = 0; // Indica a cuanto se esta jugando.
+	var _myScore = 0;
+	var _opponentScore = 0;
 	
 	/**
 	 * Devuelve las cartas mapeadas
@@ -120,6 +123,9 @@ var apiPlayer = function (name) {
 		_gameState = 0;
 		_round = 0;
 		_iHaveToPlay = event.hasHand;
+		_maxScore = event.maxScore;
+		_myScore = event.myScore;
+		_opponentScore = event.opponentScore;
 	});
 	this.addEventListener("handFinished", function (event) {
 		//TODO: llamar a la api para que aprenda.
@@ -159,7 +165,29 @@ var apiPlayer = function (name) {
 		return getAction(_randOption);
 	}
 
+	var getCardsNotPlayed = function(){
+		var cards_not_played = [];
+		if(_cardSet.getCard1() != undefined){
+			cards_not_played.push({"suit": _cardSet.getCard1().suit, "value": _cardSet.getCard1().value});
+		}
+		if(_cardSet.getCard2() != undefined){
+			cards_not_played.push({"suit": _cardSet.getCard2().suit, "value": _cardSet.getCard2().value});
+		}
+		if(_cardSet.getCard3() != undefined){
+			cards_not_played.push({"suit": _cardSet.getCard3().suit, "value": _cardSet.getCard3().value});
+		}
+		return cards_not_played;
+	}
+
 	var getData = function(){
+		var data = {
+			"score": {
+				"my_score": _myScore,
+                "opponent_score": _opponentScore,
+                "score_to_win": _maxScore
+			},
+			"cards_not_played": getCardsNotPlayed()
+		};
 		return {
             "score": {
                 "my_score": 15,

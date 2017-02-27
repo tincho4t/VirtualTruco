@@ -1155,14 +1155,14 @@ var Server = new function () {
 			nextHand();
 		}
 		
-		var dealCards = function () {
+		var dealCards = function (maxScore, player1Score, player2Score) {
 			var cards1, cards2;
 			var _deck = new NSDeck.SpanishDeck(new NSDeck.DeckShuffler());
 			_deck.shuffle();
 			cards1 = _deck.takeCard(3);
 			cards2 = _deck.takeCard(3);
-			_player1.handler.fireEvent("handInit", {cards: cards1, hasHand: _player1.isHand});
-			_player2.handler.fireEvent("handInit", {cards: cards2, hasHand: _player2.isHand});
+			_player1.handler.fireEvent("handInit", {cards: cards1, hasHand: _player1.isHand, "maxScore": maxScore, "myScore": player1Score, "opponentScore": player2Score});
+			_player2.handler.fireEvent("handInit", {cards: cards2, hasHand: _player2.isHand, "maxScore": maxScore, "myScore": player2Score, "opponentScore": player1Score});
 			_player1.setCards(cards1);
 			_player2.setCards(cards2);
 		}
@@ -1192,7 +1192,7 @@ var Server = new function () {
 			
 			_gameHistory.addHand(_handHistory);
 			
-			dealCards();
+			dealCards(config.maxScore, _player1.pointsEarned, _player2.pointsEarned);
 			
 			setTimeout(gameLoop, config.playRate);
 		}
