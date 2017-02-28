@@ -534,6 +534,10 @@ var CommonAPI = new function () {
 				}
 			};
 		};
+
+		this.getCards = function(){
+			return cards;
+		}
 	}
 	
 	/**

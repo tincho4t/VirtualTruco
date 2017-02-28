@@ -6,29 +6,42 @@ var apiPlayer = function (name) {
 
 	var _initialCardSet = [];
 	var _cardSet = [];
-	var _mappedCardList = [];
 	var _utils = new Utils();
 	var _cp = new CommonAPI.CardProcessor();
 	var _trucoLevel = 0;
 	var _gameState = 0;
 	var _round = 0; // Indica que numero de jugada vas, primera, segunda o tercera.
+	var _rounds; // Representa las cartas jugadas en cada round.
 	var _iHaveToPlay; // Indica si el que tiene q jugar la proxima carta soy yo o no.
 	var _maxScore = 0; // Indica a cuanto se esta jugando.
 	var _myScore = 0;
 	var _opponentScore = 0;
+	var _opponentEnvidoPoints = -1; // Inicializo con -1 q significa que no sabe o "son buenas"
+	var _iAmHand;
+	var _envidoIsOpen; // El envido esta abierto para cantar.
+	var _envidoSung; // Lista con lo que se canto de tanto
 	
-	/**
-	 * Devuelve las cartas mapeadas
-	 * a la simplificacion de estados
-	 * ordenadas de menor a mayor
-	 * independientmente si ya se jugaron o no
-	 **/
-	var loadMappedCards = function(){
-		_mappedCardList.push(_initialCardSet.getCard1());
-		_mappedCardList.push(_initialCardSet.getCard2());
-		_mappedCardList.push(_initialCardSet.getCard3());
-		_mappedCardList.sort(); // Las ordenamos porque por mas que teoricamente sea lo mismo nos va a converger mas rapido.
-	}
+
+	this.addEventListener("handInit", function (event) {
+		_cardSet = this.getCardSet();
+		_initialCardSet = this.getCardSet();
+		_trucoLevel = 0;
+		_gameState = 0;
+		_round = 0;
+		_iHaveToPlay = event.hasHand;
+		_iAmHand = event.hasHand;
+		_maxScore = event.maxScore;
+		_myScore = event.myScore;
+		_opponentScore = event.opponentScore;
+		_opponentEnvidoPoints = -1;
+		_envidoIsOpen = true;
+		_envidoSung = [];
+		
+		_rounds = []; // Inicializo todo con undefined
+		for(var i = 0; i < 3; i++){
+			_rounds[i] = {"my_card_played" : undefined, "opponent_card_played": undefined};
+		}
+	});
 
 	var updateTrucoLevel = function(actions){
 		var trucoLevel = _trucoLevel;
@@ -98,6 +111,15 @@ var apiPlayer = function (name) {
 		}
 	}
 
+	// Actualiza la variable que mantiene el registro de las cartas ya jugadas.
+	var updateCardPlayed = function(card){
+		_rounds[_round]["my_card_played"] = {"suit": card.suit, "value": card.value};
+	}
+
+	var updateEnvido = function(envido){
+		_envidoSung.push(envido);
+	}
+
 	var updateIHaveToPlay = function(options){
 		if(_iHaveToPlay) return; // Si me tocaba jugar antes no valido
 		
@@ -115,18 +137,6 @@ var apiPlayer = function (name) {
 
 	this.setName(name);
 
-	this.addEventListener("handInit", function (event) {
-		_cardSet = this.getCardSet();
-		_initialCardSet = this.getCardSet();
-		loadMappedCards();
-		_trucoLevel = 0;
-		_gameState = 0;
-		_round = 0;
-		_iHaveToPlay = event.hasHand;
-		_maxScore = event.maxScore;
-		_myScore = event.myScore;
-		_opponentScore = event.opponentScore;
-	});
 	this.addEventListener("handFinished", function (event) {
 		//TODO: llamar a la api para que aprenda.
 	});
@@ -135,6 +145,7 @@ var apiPlayer = function (name) {
 		updateGameState(event.state);
 		_iHaveToPlay = state == "win";
 		_round++;
+		_envidoIsOpen = false;
 	});
 
 	var getRandomOption = function (opts) {
@@ -144,9 +155,12 @@ var apiPlayer = function (name) {
 	var getAction = function (randOption) {
 		var action;
 		if(randOption==CommonAPI.PLAY_CARD) {
-			action = new Server.Action(Server.ActionType.Card, _cardSet.getNextCard());
+			cardToPlay = _cardSet.getNextCard();
+			updateCardPlayed(cardToPlay);
+			action = new Server.Action(Server.ActionType.Card, cardToPlay);
 		}
 		else {
+			if()
 			action = new Server.Action(Server.ActionType.Message, Server.Messages[randOption]);
 		}
 		return action;
@@ -167,18 +181,17 @@ var apiPlayer = function (name) {
 
 	var getCardsNotPlayed = function(){
 		var cards_not_played = [];
-		if(_cardSet.getCard1() != undefined){
-			cards_not_played.push({"suit": _cardSet.getCard1().suit, "value": _cardSet.getCard1().value});
-		}
-		if(_cardSet.getCard2() != undefined){
-			cards_not_played.push({"suit": _cardSet.getCard2().suit, "value": _cardSet.getCard2().value});
-		}
-		if(_cardSet.getCard3() != undefined){
-			cards_not_played.push({"suit": _cardSet.getCard3().suit, "value": _cardSet.getCard3().value});
-		}
+		_cardSet.getCards().forEach(function(card){
+			cards_not_played.push({"suit": card.suit, "value": card.value});
+		})
 		return cards_not_played;
 	}
 
+/*
+	TODO: 
+		Completar Rounds con las cartas del oponente.
+		Completar envidoSung con lo que cantó el oponente.
+*/
 	var getData = function(){
 		var data = {
 			"score": {
@@ -186,7 +199,15 @@ var apiPlayer = function (name) {
                 "opponent_score": _opponentScore,
                 "score_to_win": _maxScore
 			},
-			"cards_not_played": getCardsNotPlayed()
+			"cards_not_played": getCardsNotPlayed(),
+			"current_round": _round,
+			"i_am_hand": _iAmHand,
+			"rounds": _rounds,
+			"envido": {
+				"is_open": _envidoIsOpen,
+                "sung": _envidoSung,
+				"oppenent_envido_score": _opponentEnvidoPoints
+			}
 		};
 		return {
             "score": {
@@ -204,20 +225,20 @@ var apiPlayer = function (name) {
                     "value": 7
                 }
             ],
-            "round": {
-                "actual_round": "second",
-                "first_round": {
+            "current_round": 1,
+            "rounds": [
+                {
                     "my_card_played" : {"suit": "Coin", "value": 5},
                     "opponent_card_played": {"suit": "Coup", "value": 7}
                 },
-                "second_round": {
+                {
                     "my_card_played" : null,
                     "opponent_card_played": {"suit": "Sword", "value": 2}
                 }
-            },
+            ],
             "i_am_hand": true,
             "envido": {
-                "status": "finished",
+                "is_open": false,
                 "sung": ["Envido", "Envido", "RealEnvido"],
                 "oppenent_envido_score": 26
             }
@@ -246,5 +267,10 @@ var apiPlayer = function (name) {
 		});
 
 		this.postAction(action);
+	});	
+
+	this.addEventListener("cardPointsPosted", function (event) {
+		_opponentEnvidoPoints = event.cardPoints;
+		_envidoIsOpen = false; // Cierro el envido xq se acaba de terminar de cantar.
 	});
 }
