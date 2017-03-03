@@ -1000,6 +1000,10 @@ var Server = new function () {
 			currentHand.revokeHand();
 			nextHand.setAsHand();
 		}
+
+		this.getCurrentPlayer = function(){
+			return _currentPlayer;
+		}
 		
 		var getOpponent = function (player) {
 			return player==player1? player2: (player==player2? player1: null);
@@ -1219,7 +1223,10 @@ var Server = new function () {
 		}
 		
 		var receiveAction = function (action) {
+			var currentPlayer = _playerManager.getCurrentPlayer()
 			
+			_playerManager.getOpponent(currentPlayer).handler.fireEvent("opponentPlay", {action: action});
+
 			var currentHand = _runner.execute(action);
 					
 			if(isMaxScore(config.maxScore)) {
@@ -1260,6 +1267,6 @@ var Server = new function () {
 	}
 }
 p1 = new apiPlayer("Api Player");
-p2 = new QPlayer("Q-learning2");
+p2 = new RandomPlayer("Randomio");//new QPlayer("Q-learning2");
 // new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), p2);
 new Server.GameManager(new Server.GameConfig("AI Truco Championship"), p1, p2);

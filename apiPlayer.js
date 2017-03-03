@@ -143,7 +143,7 @@ var apiPlayer = function (name) {
 
 	this.addEventListener("roundEnds", function (event) {
 		updateGameState(event.state);
-		_iHaveToPlay = state == "win";
+		_iHaveToPlay = event.state == "win";
 		_round++;
 		_envidoIsOpen = false;
 	});
@@ -160,7 +160,9 @@ var apiPlayer = function (name) {
 			action = new Server.Action(Server.ActionType.Card, cardToPlay);
 		}
 		else {
-			if()
+			if(Server.Messages[randOption].type == Server.MessageType.FirstSectionChallenge){
+				updateEnvido(randOption);
+			}
 			action = new Server.Action(Server.ActionType.Message, Server.Messages[randOption]);
 		}
 		return action;
@@ -187,12 +189,15 @@ var apiPlayer = function (name) {
 		return cards_not_played;
 	}
 
-/*
-	TODO: 
-		Completar Rounds con las cartas del oponente.
-		Completar envidoSung con lo que cantó el oponente.
-*/
-	var getData = function(){
+	var getPossibleActions = function(options){
+		var possibleActions = [];
+		options.each(function (nodeName, node) {
+			possibleActions.push(nodeName);
+		});
+		return possibleActions;
+	}
+
+	var getData = function(options){
 		var data = {
 			"score": {
 				"my_score": _myScore,
@@ -207,9 +212,11 @@ var apiPlayer = function (name) {
 				"is_open": _envidoIsOpen,
                 "sung": _envidoSung,
 				"oppenent_envido_score": _opponentEnvidoPoints
-			}
+			},
+			"possible_actions": getPossibleActions(options)
 		};
-		return {
+		return data;
+		/*return {
             "score": {
                 "my_score": 15,
                 "opponent_score": 17,
@@ -242,14 +249,13 @@ var apiPlayer = function (name) {
                 "sung": ["Envido", "Envido", "RealEnvido"],
                 "oppenent_envido_score": 26
             }
-        };
+        };*/
 	}
 
 	this.addEventListener("play", function (event) {
 		updateTrucoLevel(event.options);
 		updateIHaveToPlay(event.options);
 
-		var action = getRandomAction(event.options);
 		jQuery.ajax({
             url: 'http://localhost:8000/',
             type: "POST",
@@ -259,8 +265,10 @@ var apiPlayer = function (name) {
                 console.log("EXITO");
                 console.log(data);
             },
-            data: JSON.stringify(getData())
+            data: JSON.stringify(getData(event.options))
         });
+		
+		var action = getRandomAction(event.options);
 		Log.add({
 			Juega: name,
 			Message: action.message? action.message.name: action.card
@@ -272,5 +280,15 @@ var apiPlayer = function (name) {
 	this.addEventListener("cardPointsPosted", function (event) {
 		_opponentEnvidoPoints = event.cardPoints;
 		_envidoIsOpen = false; // Cierro el envido xq se acaba de terminar de cantar.
+	});
+
+	this.addEventListener("opponentPlay", function (event) {
+		var action = event.action;
+		if(action.type == Server.ActionType.Card){
+			_rounds[_round].opponent_card_played = {"suit": action.card.suit, "value": action.card.value}; // Actualizo las played cards.
+		} else if(action.message.type == Server.MessageType.FirstSectionChallenge){
+			_envidoSung.push(action.message.name);
+		}
+
 	});
 }
