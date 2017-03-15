@@ -189,6 +189,14 @@ var apiPlayer = function (name) {
 		return cards_not_played;
 	}
 
+	var getInitialCardSet = function(){
+		var initial_cards = [];
+		_initialCardSet.getCards().forEach(function(card){
+			initial_cards.push({"suit": card.suit, "value": card.value});
+		})
+		return initial_cards;
+	}
+
 	var getPossibleActions = function(options){
 		var possibleActions = [];
 		options.each(function (nodeName, node) {
@@ -204,6 +212,7 @@ var apiPlayer = function (name) {
                 "opponent_score": _opponentScore,
                 "score_to_win": _maxScore
 			},
+			"initial_cards": getInitialCardSet(),
 			"cards_not_played": getCardsNotPlayed(),
 			"current_round": _round,
 			"i_am_hand": _iAmHand,
