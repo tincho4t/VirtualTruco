@@ -175,7 +175,11 @@ var apiPlayer = function (name) {
 
 	var getInitialCardSet = function(){
 		var initial_cards = [];
-		_initialCardSet.getCards().forEach(function(card){
+		cards = [];
+		cards.push(_initialCardSet.getCard1());
+		cards.push(_initialCardSet.getCard2());
+		cards.push(_initialCardSet.getCard3());
+		cards.forEach(function(card){
 			initial_cards.push({"suit": card.suit, "value": card.value});
 		})
 		return initial_cards;
