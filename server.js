@@ -752,7 +752,8 @@ var Server = new function () {
 			Log.add({"Gano el tanto": player.handler.getName()});
 			// ---------------------------------------------------------------
 			
-			player.pointsEarned += pointTracker.getFirstSectionPoints().getValue(player);
+			var pointsEarnedWithEnvido = pointTracker.getFirstSectionPoints().getValue(player);
+			player.pointsEarned += pointsEarnedWithEnvido;
 			
 			if(accepted) {
 				if(player.isHand) {
@@ -765,8 +766,8 @@ var Server = new function () {
 				playerManager.getOpponent(player).handler.fireEvent("cardPointsPosted", {cardPoints: winnerScore});
 			}
 			
-			player.handler.fireEvent("ownScoreChange", {score: player.pointsEarned});
-			playerManager.getOpponent(player).handler.fireEvent("opponentScoreChange", {score: player.pointsEarned});
+			player.handler.fireEvent("ownScoreChange", {score: pointsEarnedWithEnvido});
+			playerManager.getOpponent(player).handler.fireEvent("opponentScoreChange", {score: pointsEarnedWithEnvido});
 		}
 		
 		var evalEnvido = function (player) {

@@ -138,9 +138,24 @@ var apiPlayer = function (name) {
 
 	this.setName(name);
 
+	var putLearningInformation = function(points){
+		_handHystory['points'] = points;
+		jQuery.ajax({
+            url: 'http://localhost:8000/',
+            type: "PUT",
+            crossDomain: true,
+            contentType: "application/json; charset=utf-8",
+    		dataType: "json",
+            success: function (data) {
+		        console.log("Training success");
+            },
+            data: JSON.stringify(_handHystory)
+        });
+        _handHystory = {"hand_hystory": [], "points": 0};
+	}
+
 	this.addEventListener("handFinished", function (event) {
-		_handHystory['points'] = event.points;
-		//TODO: llamar a la api para que aprenda.
+		putLearningInformation(event.points);
 	});
 
 	this.addEventListener("roundEnds", function (event) {
@@ -279,6 +294,14 @@ var apiPlayer = function (name) {
 	this.addEventListener("cardPointsPosted", function (event) {
 		_opponentEnvidoPoints = event.cardPoints;
 		_envidoIsOpen = false; // Cierro el envido xq se acaba de terminar de cantar.
+	});
+
+	this.addEventListener("ownScoreChange", function (event) {
+		putLearningInformation(event.score);
+	});
+
+	this.addEventListener("opponentScoreChange", function (event) {
+		putLearningInformation(-event.score);
 	});
 
 	this.addEventListener("opponentPlay", function (event) {
