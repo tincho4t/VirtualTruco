@@ -20,7 +20,7 @@ var apiPlayer = function (name) {
 	var _iAmHand;
 	var _envidoIsOpen; // El envido esta abierto para cantar.
 	var _envidoSung; // Lista con lo que se canto de tanto
-	
+	var _handHystory;
 
 	this.addEventListener("handInit", function (event) {
 		_cardSet = this.getCardSet();
@@ -36,6 +36,7 @@ var apiPlayer = function (name) {
 		_opponentEnvidoPoints = -1;
 		_envidoIsOpen = true;
 		_envidoSung = [];
+		_handHystory = {"hand_hystory": [], "points": 0};
 		
 		_rounds = []; // Inicializo todo con undefined
 		for(var i = 0; i < 3; i++){
@@ -138,6 +139,7 @@ var apiPlayer = function (name) {
 	this.setName(name);
 
 	this.addEventListener("handFinished", function (event) {
+		_handHystory['points'] = event.points;
 		//TODO: llamar a la api para que aprenda.
 	});
 
@@ -147,39 +149,6 @@ var apiPlayer = function (name) {
 		_round++;
 		_envidoIsOpen = false;
 	});
-
-	var getRandomOption = function (opts) {
-		return opts[_utils.random(0, opts.length-1)];
-	}
-
-	var getAction = function (randOption) {
-		var action;
-		if(randOption==CommonAPI.PLAY_CARD) {
-			cardToPlay = _cardSet.getNextCard();
-			updateCardPlayed(cardToPlay);
-			action = new Server.Action(Server.ActionType.Card, cardToPlay);
-		}
-		else {
-			if(Server.Messages[randOption].type == Server.MessageType.FirstSectionChallenge){
-				updateEnvido(randOption);
-			}
-			action = new Server.Action(Server.ActionType.Message, Server.Messages[randOption]);
-		}
-		return action;
-	}
-
-	var getRandomAction = function(options){
-		var _randOption = null;
-		var _allMyOptions = [];
-
-		options.each(function (nodeName, node) {
-			if(nodeName != "FaltaEnvido" || _cardSet.calculateEnvido() > 30) {
-				_allMyOptions.push(nodeName);
-			}
-		});
-		_randOption = getRandomOption(_allMyOptions);
-		return getAction(_randOption);
-	}
 
 	var getCardsNotPlayed = function(){
 		var cards_not_played = [];
@@ -261,29 +230,50 @@ var apiPlayer = function (name) {
         };*/
 	}
 
+	var pullCardFromSet = function(cardDto){
+		var cardHaveToPlay;
+		_cardSet.getCards().forEach(function(card){
+			if(card.suit == cardDto.suit && card.value == cardDto.value){
+				cardHaveToPlay = card;
+			}
+		});
+		_cardSet.pullCard(cardHaveToPlay);
+		return cardHaveToPlay;
+	}
+
 	this.addEventListener("play", function (event) {
 		updateTrucoLevel(event.options);
 		updateIHaveToPlay(event.options);
 
+// Usar esta extension para solucionar el CORS https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi/related?hl=en-US
+		var requestData = getData(event.options);
+		var thisPlayer = this;
 		jQuery.ajax({
             url: 'http://localhost:8000/',
             type: "POST",
+            crossDomain: true,
             contentType: "application/json; charset=utf-8",
     		dataType: "json",
             success: function (data) {
-                console.log("EXITO");
-                console.log(data);
-            },
-            data: JSON.stringify(getData(event.options))
-        });
-		
-		var action = getRandomAction(event.options);
-		Log.add({
-			Juega: name,
-			Message: action.message? action.message.name: action.card
-		});
+                _handHystory['hand_hystory'].push({"gameStatus": requestData, "action": data});
+		        console.log("Exito", data);
+				var action;
+		        if(data.action == "PlayCard"){
+		        	var cardToPlay = pullCardFromSet(data.card);
+		        	action = new Server.Action(Server.ActionType.Card, cardToPlay);
+		        } else {
+					action = new Server.Action(Server.ActionType.Message, Server.Messages[data.action]);
+		        }
 
-		this.postAction(action);
+		        Log.add({
+					Juega: name,
+					Message: action.message? action.message.name: action.card
+				});
+
+				thisPlayer.postAction(action);
+            },
+            data: JSON.stringify(requestData)
+        });
 	});	
 
 	this.addEventListener("cardPointsPosted", function (event) {
