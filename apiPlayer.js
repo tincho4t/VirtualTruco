@@ -147,7 +147,7 @@ var apiPlayer = function (name) {
             contentType: "application/json; charset=utf-8",
     		dataType: "json",
             success: function (data) {
-		        console.log("Training success");
+		        // console.log("Training success");
             },
             data: JSON.stringify(_handHystory)
         });
@@ -275,7 +275,7 @@ var apiPlayer = function (name) {
     		dataType: "json",
             success: function (data) {
                 _handHystory['hand_hystory'].push({"gameStatus": requestData, "action": data});
-		        console.log("Exito", data);
+		        // console.log("Exito", data);
 				var action;
 		        if(data.action == "PlayCard"){
 		        	var cardToPlay = pullCardFromSet(data.card);

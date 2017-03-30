@@ -1,3 +1,30 @@
+var matchWins = [];
+
+var updateWinPlayer1 = function(win){
+	matchWins.push(win)
+	if(matchWins.length > 1000){
+		matchWins.splice(0, 1)
+	}
+}
+
+var getAverage = function(a){
+	var res=0;
+	for(i=0;i<a.length;i++){
+		if(a[i]){
+			res++;
+		}
+	}
+	return 100 * (res/a.length)
+}
+
+var startNewGame = function(){
+	p1 = new apiPlayer("Api Player");
+	p2 = new RandomPlayer("Randomio");
+	// p2 = new QPlayer("Q-learning2");
+	// p2 = new apiPlayer("Api Player II")
+	// new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), p2);
+	new Server.GameManager(new Server.GameConfig("AI Truco Championship"), p1, p2);
+}
 
 /**
  * @Namespace
@@ -1084,8 +1111,8 @@ var Server = new function () {
 	
 	this.GameConfig = function (name) {
 		this.name = name;
-		this.playRate = 4;
-		this.maxScore = 10000;
+		this.playRate = 2;
+		this.maxScore = 30;
 	}
 	
 	this.GameManager = function (config, playerHandler1, playerHandler2) {
@@ -1132,7 +1159,7 @@ var Server = new function () {
 				if(player2.totalWon.length > 100){
 					player2.totalWon.splice(0, 1)
 				}
-				console.log("Last 100 Wins = "+getSum(player1.totalWon)+" "+getSum(player2.totalWon));
+				// console.log("Last 100 Wins = "+getSum(player1.totalWon)+" "+getSum(player2.totalWon));
 			}
 		}
 
@@ -1221,6 +1248,9 @@ var Server = new function () {
 			}
 			clearInterval(_interval);
 			//sendGameData(); Anule el send
+			updateWinPlayer1(_player1.pointsEarned > _player2.pointsEarned);
+			console.log("Player 1 wins " + getAverage(matchWins) + "%");
+			startNewGame();
 		}
 		
 		var receiveAction = function (action) {
@@ -1267,7 +1297,5 @@ var Server = new function () {
 		
 	}
 }
-p1 = new apiPlayer("Api Player");
-p2 = new QPlayer("Q-learning2");
-// new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), p2);
-new Server.GameManager(new Server.GameConfig("AI Truco Championship"), p1, p2);
+
+startNewGame();

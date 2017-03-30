@@ -428,7 +428,7 @@ var QPlayer = function (name) {
 		_roundActions = [];
 		_iHaveToPlay = event.hasHand;
 		if(_utils.random(1,100)>95){
-			showQ();
+			;//showQ();
 		}
 	});
 	this.addEventListener("handFinished", function (event) {
