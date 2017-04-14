@@ -53,7 +53,8 @@ var HTTPLoader = function(url, method, scope, func){
 
 
 var Log = new function () {
-	var MAX_LENGTH = 100;
+	var MAX_LENGTH = 20;
+	// var MAX_LENGTH = 2000;
     var _output = document.createElement("div");
     _output.style.fontFamily = "Courier New";
     _output.style.fontSize   = "11px";

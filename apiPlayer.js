@@ -139,6 +139,10 @@ var apiPlayer = function (name) {
 	this.setName(name);
 
 	var putLearningInformation = function(points){
+		if(_handHystory.hand_hystory.length < 1){
+			console.log("Truco envidado no aceptado");
+			return
+		}
 		_handHystory['points'] = points;
 		jQuery.ajax({
             url: 'http://localhost:8000/',

@@ -19,9 +19,9 @@ var getAverage = function(a){
 
 var startNewGame = function(){
 	p1 = new apiPlayer("Api Player");
-	p2 = new RandomPlayer("Randomio");
+	// p2 = new RandomPlayer("Randomio");
 	// p2 = new QPlayer("Q-learning2");
-	// p2 = new apiPlayer("Api Player II")
+	p2 = new apiPlayer("Api Player II")
 	// new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), p2);
 	new Server.GameManager(new Server.GameConfig("AI Truco Championship"), p1, p2);
 }
@@ -1111,7 +1111,7 @@ var Server = new function () {
 	
 	this.GameConfig = function (name) {
 		this.name = name;
-		this.playRate = 2;
+		this.playRate = 1;
 		this.maxScore = 30;
 	}
 	
