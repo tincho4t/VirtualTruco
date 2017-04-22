@@ -539,6 +539,14 @@ var CommonAPI = new function () {
 		this.getCards = function(){
 			return cards;
 		}
+
+		var logCard = function(card){
+			return card.suit + " " + card.value; 
+		}
+
+		this.logCardset = function(){
+			return logCard(this.getCard1()) + ", " + logCard(this.getCard2()) + ", " + logCard(this.getCard3()) + " ";
+		}
 	}
 	
 	/**

@@ -42,6 +42,11 @@ var apiPlayer = function (name) {
 		for(var i = 0; i < 3; i++){
 			_rounds[i] = {"my_card_played" : undefined, "opponent_card_played": undefined};
 		}
+
+		Log.add({
+			Juega: name,
+			Message: 'Cardset: ' + _cardSet.logCardset()
+		});
 	});
 
 	var updateTrucoLevel = function(actions){
@@ -214,7 +219,8 @@ var apiPlayer = function (name) {
                 "sung": _envidoSung,
 				"oppenent_envido_score": _opponentEnvidoPoints
 			},
-			"possible_actions": getPossibleActions(options)
+			"possible_actions": getPossibleActions(options),
+			"truco_level": _trucoLevel
 		};
 		return data;
 		/*return {
@@ -249,7 +255,8 @@ var apiPlayer = function (name) {
                 "is_open": false,
                 "sung": ["Envido", "Envido", "RealEnvido"],
                 "oppenent_envido_score": 26
-            }
+            },
+            "truco_level": 1
         };*/
 	}
 
