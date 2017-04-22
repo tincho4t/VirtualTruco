@@ -59,15 +59,22 @@ var apiPlayer = function (name) {
 		 		trucoLevel = 1;
 		 	} else if(nodeName == "ValeCuatro"){
 		 		trucoLevel = 2;
-		 	} else if(nodeName == "NoQuiero"){
+		 	} else if(node.name == "SecondSectionNoQuiero"){
 		 		var newValue = node.value - 1;
 		 		if(trucoLevel < newValue){
 		 			trucoLevel = newValue;
 		 		}
-		 	} //TODO: Validar si no hay un bug aca.
+		 	}
 		});
 
 		_trucoLevel = trucoLevel;
+	}
+
+	var updateQuieroValeCuatroIfIsNeccesary = function(action){
+		if(_trucoLevel == 2 && action.type == Server.ActionType.Message && action.message.name == "Quiero"){
+			// Me aceptaron el quiero vale cuatro
+			_trucoLevel = 3;
+		}
 	}
 
 	var updateGameState = function(state){
@@ -293,6 +300,7 @@ var apiPlayer = function (name) {
 		        	action = new Server.Action(Server.ActionType.Card, cardToPlay);
 		        } else {
 					action = new Server.Action(Server.ActionType.Message, Server.Messages[data.action]);
+					updateQuieroValeCuatroIfIsNeccesary(action);
 		        }
 
 		        Log.add({
@@ -326,6 +334,6 @@ var apiPlayer = function (name) {
 		} else if(action.message.type == Server.MessageType.FirstSectionChallenge){
 			_envidoSung.push(action.message.name);
 		}
-
+		updateQuieroValeCuatroIfIsNeccesary(action);
 	});
 }
