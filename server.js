@@ -2,7 +2,7 @@ var matchWins = [];
 
 var updateWinPlayer1 = function(win){
 	matchWins.push(win)
-	if(matchWins.length > 1000){
+	if(matchWins.length > 10000){
 		matchWins.splice(0, 1)
 	}
 }
@@ -18,10 +18,10 @@ var getAverage = function(a){
 }
 
 var startNewGame = function(){
-	p1 = new apiPlayer("Api Player");
-	// p2 = new RandomPlayer("Randomio");
+	p1 = new apiPlayer("Api Player", "8000");
+    // p2 = new RandomPlayer("Randomio");
 	// p2 = new QPlayer("Q-learning2");
-	p2 = new apiPlayer("Api Player II")
+    p2 = new apiPlayer("Api Player II", "8000")
 	// new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), p2);
 	new Server.GameManager(new Server.GameConfig("AI Truco Championship"), p1, p2);
 }
@@ -1111,7 +1111,7 @@ var Server = new function () {
 	
 	this.GameConfig = function (name) {
 		this.name = name;
-		this.playRate = 1;
+		this.playRate = 200;
 		this.maxScore = 30;
 	}
 	

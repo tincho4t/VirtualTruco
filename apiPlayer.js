@@ -1,7 +1,7 @@
 /*
  * Api-Player
  */
-var apiPlayer = function (name) {
+var apiPlayer = function (name, port) {
 	CommonAPI.AbstractPlayer.call(this);
 
 	var _initialCardSet = [];
@@ -21,6 +21,7 @@ var apiPlayer = function (name) {
 	var _envidoIsOpen; // El envido esta abierto para cantar.
 	var _envidoSung; // Lista con lo que se canto de tanto
 	var _handHystory;
+	var _url = 'http://localhost:' + port + '/'; //http://localhost:8000/
 
 	this.addEventListener("handInit", function (event) {
 		_cardSet = this.getCardSet();
@@ -157,7 +158,7 @@ var apiPlayer = function (name) {
 		}
 		_handHystory['points'] = points;
 		jQuery.ajax({
-            url: 'http://localhost:8000/',
+            url: _url,
             type: "PUT",
             crossDomain: true,
             contentType: "application/json; charset=utf-8",
@@ -286,7 +287,7 @@ var apiPlayer = function (name) {
 		var requestData = getData(event.options);
 		var thisPlayer = this;
 		jQuery.ajax({
-            url: 'http://localhost:8000/',
+            url: _url,
             type: "POST",
             crossDomain: true,
             contentType: "application/json; charset=utf-8",
