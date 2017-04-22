@@ -27,6 +27,10 @@ var RandomPlayer = function (name) {
 
 	this.addEventListener("handInit", function (event) {
 		_cardSet = this.getCardSet();
+		Log.add({
+					Juega: name,
+					Message: 'Cardset: ' + _cardSet.logCardset()
+				});
 	});
 	this.addEventListener("handEnd", function (event) {
 		// event.cardShowing
