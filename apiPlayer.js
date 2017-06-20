@@ -151,10 +151,17 @@ var apiPlayer = function (name, port) {
 
 	this.setName(name);
 
+	var simulateSingTruco = function(){
+		var trucoEnvidadoStatus = getData(null);
+		trucoEnvidadoStatus.possible_actions = ["PlayCard", "Truco"];
+		return {"gameStatus": trucoEnvidadoStatus, "action": {action: "Truco", card: null}};
+	}
+
 	var putLearningInformation = function(points){
 		if(_handHystory.hand_hystory.length < 1){
 			console.log("Truco envidado no aceptado");
-			return
+ 			// Simulo que cante truco.
+			_handHystory.hand_hystory = [simulateSingTruco()];
 		}
 		_handHystory['points'] = points;
 		jQuery.ajax({
@@ -204,9 +211,11 @@ var apiPlayer = function (name, port) {
 
 	var getPossibleActions = function(options){
 		var possibleActions = [];
-		options.each(function (nodeName, node) {
-			possibleActions.push(nodeName);
-		});
+		if(options){
+			options.each(function (nodeName, node) {
+				possibleActions.push(nodeName);
+			});
+		}
 		return possibleActions;
 	}
 
