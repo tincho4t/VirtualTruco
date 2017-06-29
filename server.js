@@ -21,7 +21,7 @@ var startNewGame = function(){
 	p1 = new apiPlayer("Api Player", "8000");
     // p2 = new RandomPlayer("Randomio");
 	// p2 = new QPlayer("Q-learning2");
-    p2 = new apiPlayer("Api Player II", "8000")
+    p2 = new apiPlayer("Api Player II", "8001")
 	// new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), p2);
 	new Server.GameManager(new Server.GameConfig("AI Truco Championship"), p1, p2);
 }
@@ -1111,7 +1111,7 @@ var Server = new function () {
 	
 	this.GameConfig = function (name) {
 		this.name = name;
-		this.playRate = 200;
+		this.playRate = 0.1;
 		this.maxScore = 30;
 	}
 	

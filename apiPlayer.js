@@ -20,7 +20,7 @@ var apiPlayer = function (name, port) {
 	var _iAmHand;
 	var _envidoIsOpen; // El envido esta abierto para cantar.
 	var _envidoSung; // Lista con lo que se canto de tanto
-	var _handHystory;
+	var _handHistory;
 	var _url = 'http://localhost:' + port + '/'; //http://localhost:8000/
 
 	this.addEventListener("handInit", function (event) {
@@ -37,7 +37,7 @@ var apiPlayer = function (name, port) {
 		_opponentEnvidoPoints = -1;
 		_envidoIsOpen = true;
 		_envidoSung = [];
-		_handHystory = {"hand_hystory": [], "points": 0};
+		_handHistory = {"hand_history": [], "points": 0};
 		
 		_rounds = []; // Inicializo todo con undefined
 		for(var i = 0; i < 3; i++){
@@ -158,12 +158,12 @@ var apiPlayer = function (name, port) {
 	}
 
 	var putLearningInformation = function(points){
-		if(_handHystory.hand_hystory.length < 1){
+		if(_handHistory.hand_history.length < 1){
 			console.log("Truco envidado no aceptado");
  			// Simulo que cante truco.
-			_handHystory.hand_hystory = [simulateSingTruco()];
+			_handHistory.hand_history = [simulateSingTruco()];
 		}
-		_handHystory['points'] = points;
+		_handHistory['points'] = points;
 		jQuery.ajax({
             url: _url,
             type: "PUT",
@@ -173,9 +173,9 @@ var apiPlayer = function (name, port) {
             success: function (data) {
 		        // console.log("Training success");
             },
-            data: JSON.stringify(_handHystory)
+            data: JSON.stringify(_handHistory)
         });
-        _handHystory = {"hand_hystory": [], "points": 0};
+        _handHistory = {"hand_history": [], "points": 0};
 	}
 
 	this.addEventListener("handFinished", function (event) {
@@ -302,7 +302,7 @@ var apiPlayer = function (name, port) {
             contentType: "application/json; charset=utf-8",
     		dataType: "json",
             success: function (data) {
-                _handHystory['hand_hystory'].push({"gameStatus": requestData, "action": data});
+                _handHistory['hand_history'].push({"gameStatus": requestData, "action": data});
 		        // console.log("Exito", data);
 				var action;
 		        if(data.action == "PlayCard"){
