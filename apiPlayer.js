@@ -71,10 +71,16 @@ var apiPlayer = function (name, port) {
 		_trucoLevel = trucoLevel;
 	}
 
-	var updateQuieroValeCuatroIfIsNeccesary = function(action){
-		if(_trucoLevel == 2 && action.type == Server.ActionType.Message && action.message.name == "Quiero"){
-			// Me aceptaron el quiero vale cuatro
-			_trucoLevel = 3;
+	var updateTrucloLevelIfIsNeccesary = function(action){
+		if(_trucoLevel > 0 && action.type == Server.ActionType.Message && action.message.name == "Quiero"){
+			/*	
+				El problema esta en que no puedo diferenciar el Quiero de un Envido
+				que del Truco. Por lo tanto si trucoLecel > 0 ya se canto truco
+				y el Quiero es del truco.
+				TODO: Atajar el caso cuando canto truco y el otro acepta. Ya que
+				como tiene el "quiero" no puedo cantar Truco.
+			*/
+			_trucoLevel++;
 		}
 	}
 
@@ -307,10 +313,15 @@ var apiPlayer = function (name, port) {
 				var action;
 		        if(data.action == "PlayCard"){
 		        	var cardToPlay = pullCardFromSet(data.card);
+		        	updateCardPlayed(cardToPlay);
 		        	action = new Server.Action(Server.ActionType.Card, cardToPlay);
 		        } else {
-					action = new Server.Action(Server.ActionType.Message, Server.Messages[data.action]);
-					updateQuieroValeCuatroIfIsNeccesary(action);
+		        	var actionMessage = Server.Messages[data.action];
+					action = new Server.Action(Server.ActionType.Message, actionMessage);
+					if(actionMessage.type==Server.MessageType.FirstSectionChallenge){
+						updateEnvido(data.action);
+					}
+					updateTrucloLevelIfIsNeccesary(action);
 		        }
 
 		        Log.add({
@@ -344,6 +355,6 @@ var apiPlayer = function (name, port) {
 		} else if(action.message.type == Server.MessageType.FirstSectionChallenge){
 			_envidoSung.push(action.message.name);
 		}
-		updateQuieroValeCuatroIfIsNeccesary(action);
+		updateTrucloLevelIfIsNeccesary(action);
 	});
 }

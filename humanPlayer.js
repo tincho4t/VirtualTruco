@@ -79,8 +79,17 @@ var HumanPlayer = function (name) {
 		var player = this;
 
 		$('#dialog').dialog({
-		  buttons: buildButtons(event.options, player),
-		  close: function(event, ui){}
+		    buttons: buildButtons(event.options, player),
+		    dialogClass: 'ui-dialog-osx',
+		    position: { my: "left bottom", at: "bottom-10%", of: window },
+		    modal: true,
+		    draggable: true,
+		    resizable: false,
+		    // show: 'blind',
+    		// hide: 'blind',
+
+
+		    
 		});
 		
 	});
