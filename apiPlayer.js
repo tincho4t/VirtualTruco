@@ -225,6 +225,14 @@ var apiPlayer = function (name, port) {
 		return possibleActions;
 	}
 
+	var clone = function(obj){
+		/*
+		No es la forma mas eficiente y no maneja 
+		bien las fechas pero para fines practivos va bien
+		*/
+		return JSON.parse(JSON.stringify(obj))
+	}
+
 	var getData = function(options){
 		var data = {
 			"score": {
@@ -236,10 +244,10 @@ var apiPlayer = function (name, port) {
 			"cards_not_played": getCardsNotPlayed(),
 			"current_round": _round,
 			"i_am_hand": _iAmHand,
-			"rounds": _rounds,
+			"rounds": clone(_rounds),
 			"envido": {
 				"is_open": _envidoIsOpen,
-                "sung": _envidoSung,
+                "sung": _envidoSung.slice(),
 				"oppenent_envido_score": _opponentEnvidoPoints
 			},
 			"possible_actions": getPossibleActions(options),
