@@ -19,6 +19,7 @@ var apiPlayer = function (name, port) {
 	var _opponentEnvidoPoints = -1; // Inicializo con -1 q significa que no sabe o "son buenas"
 	var _iAmHand;
 	var _envidoIsOpen; // El envido esta abierto para cantar.
+	var _playingEnvido; // Se esta jugando el envido.
 	var _envidoSung; // Lista con lo que se canto de tanto
 	var _handHistory;
 	var _url = 'http://localhost:' + port + '/'; //http://localhost:8000/
@@ -38,6 +39,7 @@ var apiPlayer = function (name, port) {
 		_envidoIsOpen = true;
 		_envidoSung = [];
 		_handHistory = {"hand_history": [], "points": 0};
+		_playingEnvido = false;
 		
 		_rounds = []; // Inicializo todo con undefined
 		for(var i = 0; i < 3; i++){
@@ -50,6 +52,7 @@ var apiPlayer = function (name, port) {
 		});
 	});
 
+    //TODO: Analizar si con el cambio es necesario esto.
 	var updateTrucoLevel = function(actions){
 		var trucoLevel = _trucoLevel;
 		
@@ -72,15 +75,17 @@ var apiPlayer = function (name, port) {
 	}
 
 	var updateTrucloLevelIfIsNeccesary = function(action){
-		if(_trucoLevel > 0 && action.type == Server.ActionType.Message && action.message.name == "Quiero"){
-			/*	
-				El problema esta en que no puedo diferenciar el Quiero de un Envido
-				que del Truco. Por lo tanto si trucoLecel > 0 ya se canto truco
-				y el Quiero es del truco.
-				TODO: Atajar el caso cuando canto truco y el otro acepta. Ya que
-				como tiene el "quiero" no puedo cantar Truco.
-			*/
+		if(_playingEnvido == false && action.type == Server.ActionType.Message && action.message.name == "Quiero"){
 			_trucoLevel++;
+		}
+	}
+
+	var updatePlayingEnvido = function(action) {
+		if(action.type == Server.ActionType.Message && ["Quiero", "NoQuiero"].indexOf(action.message.name) > -1){
+			_playingEnvido = false; // Sea q aceptaron el envido el truco seguro que el envido no se esta jugando mas.
+			_envidoIsOpen = false; // Idem anterior. Creo q no es necesario pero por las dudas lo apago igual.
+		} else if(action.message && action.message.type==Server.MessageType.FirstSectionChallenge) {
+			_playingEnvido = true;
 		}
 	}
 
@@ -330,6 +335,7 @@ var apiPlayer = function (name, port) {
 						updateEnvido(data.action);
 					}
 					updateTrucloLevelIfIsNeccesary(action);
+		        	updatePlayingEnvido(action);
 		        }
 
 		        Log.add({
@@ -364,5 +370,6 @@ var apiPlayer = function (name, port) {
 			_envidoSung.push(action.message.name);
 		}
 		updateTrucloLevelIfIsNeccesary(action);
+		updatePlayingEnvido(action);
 	});
 }
