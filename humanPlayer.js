@@ -5,6 +5,7 @@
 var HumanPlayer = function (name) {
 	CommonAPI.AbstractPlayer.call(this);
 
+	var _initialCardSet = [];
 	var _cardSet = [];
 	var _utils = new Utils();
 
@@ -25,8 +26,17 @@ var HumanPlayer = function (name) {
 
 	this.setName(name);
 
+	var buildInitialCardSet = function(cardSet){
+		cards = [];
+		cards.push(cardSet.getCard1());
+		cards.push(cardSet.getCard2());
+		cards.push(cardSet.getCard3());
+		return cards;
+	}
+
 	this.addEventListener("handInit", function (event) {
 		_cardSet = this.getCardSet();
+		_initialCardSet = buildInitialCardSet(_cardSet);
 		Log.add({
 					Juega: name,
 					Message: 'Cardset: ' + _cardSet.logCardset()
@@ -75,6 +85,19 @@ var HumanPlayer = function (name) {
 		return buttons;
 	}
 
+	var showCurrentCats = function(){
+		$('#my_cards').text("Tus cartas:");
+		_initialCardSet.forEach(function(card){
+			var card_name = card.suit + " " + card.value;
+			if(_cardSet.getCards().indexOf(card) >= 0) {
+				$('#my_cards').append(" <b>" + card_name + "</b>");	
+			}
+			else {
+				$('#my_cards').append(" " + card_name);
+			}
+		});
+	}
+
 	this.addEventListener("play", function (event) {
 		var player = this;
 
@@ -86,11 +109,8 @@ var HumanPlayer = function (name) {
 		    draggable: true,
 		    resizable: false,
 		    // show: 'blind',
-    		// hide: 'blind',
-
-
-		    
+    		// hide: 'blind',		    
 		});
-		
+		showCurrentCats();
 	});
 }

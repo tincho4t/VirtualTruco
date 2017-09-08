@@ -1,7 +1,7 @@
 /*
  * Api-Player
  */
-var apiPlayer = function (name, port) {
+var apiPlayer = function (name, port, showCardsInTheBeginning=true) {
 	CommonAPI.AbstractPlayer.call(this);
 
 	var _initialCardSet = [];
@@ -46,10 +46,12 @@ var apiPlayer = function (name, port) {
 			_rounds[i] = {"my_card_played" : undefined, "opponent_card_played": undefined};
 		}
 
-		Log.add({
-			Juega: name,
-			Message: 'Cardset: ' + _cardSet.logCardset()
-		});
+		if(showCardsInTheBeginning){
+			Log.add({
+				Juega: name,
+				Message: 'Cardset: ' + _cardSet.logCardset()
+			});
+		}
 	});
 
     //TODO: Analizar si con el cambio es necesario esto.
@@ -191,6 +193,12 @@ var apiPlayer = function (name, port) {
 
 	this.addEventListener("handFinished", function (event) {
 		putLearningInformation(event.points);
+		if(!showCardsInTheBeginning){
+			Log.add({
+				Juega: name,
+				Message: 'Cartas ronda anterior: ' + _initialCardSet.logCardset()
+			});
+		}
 	});
 
 	this.addEventListener("roundEnds", function (event) {
