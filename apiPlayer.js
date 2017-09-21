@@ -246,6 +246,17 @@ var apiPlayer = function (name, port, showCardsInTheBeginning=true) {
 		return JSON.parse(JSON.stringify(obj))
 	}
 
+	var getDecisionType = function(options){
+		var type = null;
+		options.each(function (nodeName, node) {
+			if(nodeName == "Quiero") {
+				type = node.name == "FirstSectionQuiero" ? "Envido" : "Truco";
+			}
+		});
+
+		return type;
+	}
+
 	var getData = function(options){
 		var data = {
 			"score": {
@@ -264,7 +275,8 @@ var apiPlayer = function (name, port, showCardsInTheBeginning=true) {
 				"oppenent_envido_score": _opponentEnvidoPoints
 			},
 			"possible_actions": getPossibleActions(options),
-			"truco_level": _trucoLevel
+			"truco_level": _trucoLevel,
+			"decision_type": getDecisionType(options)
 		};
 		return data;
 		/*return {

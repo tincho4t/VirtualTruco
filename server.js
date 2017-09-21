@@ -18,8 +18,9 @@ var getAverage = function(a){
 }
 
 var startNewGame = function(){
-	//p1 = new apiPlayer("Api Player", "8000");
-    p1 = new RandomPlayer("Randomio");
+	p1 = new apiPlayer("Api Player", "8123", false);
+    //p1 = new HumanPlayer("Human 1")
+    //p1 = new RandomPlayer("Randomio");
 	// p2 = new QPlayer("Q-learning2");
     p2 = new HumanPlayer("Human")
 	// new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), p2);
