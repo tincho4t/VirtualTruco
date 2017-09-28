@@ -248,11 +248,13 @@ var apiPlayer = function (name, port, showCardsInTheBeginning=true) {
 
 	var getDecisionType = function(options){
 		var type = null;
-		options.each(function (nodeName, node) {
-			if(nodeName == "Quiero") {
-				type = node.name == "FirstSectionQuiero" ? "Envido" : "Truco";
-			}
-		});
+		if(options != null){
+			options.each(function (nodeName, node) {
+				if(nodeName == "Quiero") {
+					type = node.name == "FirstSectionQuiero" ? "Envido" : "Truco";
+				}
+			});
+		}
 
 		return type;
 	}
