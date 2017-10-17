@@ -20,13 +20,14 @@ var getAverage = function(a){
 	return 100 * (res/a.length)
 }
 
+// Defino los jugadores globales para mantener el historico en los distintso partidos
+p1 = new apiPlayer("Api Player", "8123", false);
+//p1 = new HumanPlayer("Human 1")
+//p1 = new RandomPlayer("Randomio");
+p2 = new RandomPlayer("Randomio II");
+// p2 = new QPlayer("Q-learning2");
+//p2 = new HumanPlayer("Human")
 var startNewGame = function(){
-	//p1 = new apiPlayer("Api Player", "8123", false);
-    //p1 = new HumanPlayer("Human 1")
-    p1 = new RandomPlayer("Randomio");
-    p2 = new RandomPlayer("Randomio II");
-	// p2 = new QPlayer("Q-learning2");
-    //p2 = new HumanPlayer("Human")
 	// new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), p2);
 	new Server.GameManager(new Server.GameConfig("AI Truco Championship"), p1, p2);
 }

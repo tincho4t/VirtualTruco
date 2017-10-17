@@ -23,6 +23,68 @@ var apiPlayer = function (name, port, showCardsInTheBeginning=true) {
 	var _envidoSung; // Lista con lo que se canto de tanto
 	var _handHistory;
 	var _url = 'http://localhost:' + port + '/'; //http://localhost:8000/
+	
+	var OPPONENT_METRICS_MAX_SIZE = 5;
+	var _opponentMetrics = {
+		'envido_sung_being_hand': new Metric(OPPONENT_METRICS_MAX_SIZE),
+		'real_envido_sung_being_hand': new Metric(OPPONENT_METRICS_MAX_SIZE),
+		'falta_envido_sung_being_hand': new Metric(OPPONENT_METRICS_MAX_SIZE),
+		'envido_sung_not_being_hand': new Metric(OPPONENT_METRICS_MAX_SIZE),
+		'real_envido_sung_not_being_hand': new Metric(OPPONENT_METRICS_MAX_SIZE),
+		'falta_envido_sung_not_being_hand': new Metric(OPPONENT_METRICS_MAX_SIZE),
+		'truco_sung_first_hand': new Metric(OPPONENT_METRICS_MAX_SIZE),
+		'retruco_sung_second_hand': new Metric(OPPONENT_METRICS_MAX_SIZE),
+		'valecuatro_sung_third_hand': new Metric(OPPONENT_METRICS_MAX_SIZE)
+	};
+
+	var newHandMetric = function(){
+		for(var key in _opponentMetrics) {
+			var metric = _opponentMetrics[key];
+			metric.addNewMetric(0); // inicializo la nueva metrica con 0
+		}
+	};
+
+	// En base a lo que jugo tu oponente actualiza las metricas de contexto
+	var oppopnentPlayed = function(action){
+		
+		// Oponente canto algo de tipo envido
+		if(action.type == Server.ActionType.Message && action.message.type==Server.MessageType.FirstSectionChallenge){
+			if(_envidoSung.length == 0){ // Todavia no se habia cantado nada de envido
+				
+				if(_iAmHand && action.message.name == "Envido")
+					_opponentMetrics['envido_sung_not_being_hand'].increaseCurrentMetric(1);
+				else if(_iAmHand && action.message.name == "RealEnvido")
+					_opponentMetrics['real_envido_sung_not_being_hand'].increaseCurrentMetric(1);
+				else if(_iAmHand && action.message.name == "FaltaEnvido") 
+					_opponentMetrics['falta_envido_sung_not_being_hand'].increaseCurrentMetric(1);
+				
+				else if(!_iAmHand && action.message.name == "Envido")
+					_opponentMetrics['envido_sung_being_hand'].increaseCurrentMetric(1);
+				else if(!_iAmHand && action.message.name == "RealEnvido")
+					_opponentMetrics['real_envido_sung_being_hand'].increaseCurrentMetric(1);
+				else if(!_iAmHand && action.message.name == "FaltaEnvido") 
+					_opponentMetrics['falta_envido_sung_being_hand'].increaseCurrentMetric(1);
+
+			}
+		} else if(action.type == Server.ActionType.Message && action.message.type==Server.MessageType.SecondSectionChallenge){
+			if(_round == 0)
+				_opponentMetrics['truco_sung_first_hand'].increaseCurrentMetric(1);
+			else if(_round == 1)
+				_opponentMetrics['retruco_sung_second_hand'].increaseCurrentMetric(1);
+			else
+				_opponentMetrics['valecuatro_sung_third_hand'].increaseCurrentMetric(1);
+		}
+	}
+
+	var getOpponentMetrics = function(){
+		opponentMetricsAverage = {};
+		for(var key in _opponentMetrics) {
+			var metric = _opponentMetrics[key];
+			opponentMetricsAverage[key] = metric.getAverage();
+		};
+
+		return opponentMetricsAverage;
+	}
 
 	this.addEventListener("handInit", function (event) {
 		_cardSet = this.getCardSet();
@@ -52,6 +114,8 @@ var apiPlayer = function (name, port, showCardsInTheBeginning=true) {
 				Message: 'Cardset: ' + _cardSet.logCardset()
 			});
 		}
+
+		newHandMetric();
 	});
 
     //TODO: Analizar si con el cambio es necesario esto.
@@ -278,7 +342,8 @@ var apiPlayer = function (name, port, showCardsInTheBeginning=true) {
 			},
 			"possible_actions": getPossibleActions(options),
 			"truco_level": _trucoLevel,
-			"decision_type": getDecisionType(options)
+			"decision_type": getDecisionType(options),
+			"opponentMetrics" : getOpponentMetrics()
 		};
 		return data;
 		/*return {
@@ -386,6 +451,8 @@ var apiPlayer = function (name, port, showCardsInTheBeginning=true) {
 
 	this.addEventListener("opponentPlay", function (event) {
 		var action = event.action;
+		oppopnentPlayed(action); // Va primero porque analiza envidoSung y no quiero q este actualizado.
+
 		if(action.type == Server.ActionType.Card){
 			_rounds[_round].opponent_card_played = {"suit": action.card.suit, "value": action.card.value}; // Actualizo las played cards.
 		} else if(action.message.type == Server.MessageType.FirstSectionChallenge){
