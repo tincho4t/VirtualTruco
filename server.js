@@ -1,37 +1,3 @@
-var matchWins = [];
-var pointsWon = [];
-
-var updateWinPlayer1 = function(player1Points, player2Points){
-	matchWins.push(player1Points > player2Points)
-	pointsWon.push(player1Points - player2Points);
-	if(matchWins.length > 10000){
-		matchWins.splice(0, 1)
-		pointsWon.splice(0, 1)
-	}
-}
-
-var getAverage = function(a){
-	var res=0;
-	for(i=0;i<a.length;i++){
-		if(a[i]){
-			res++;
-		}
-	}
-	return 100 * (res/a.length)
-}
-
-// Defino los jugadores globales para mantener el historico en los distintso partidos
-p1 = new apiPlayer("Api Player", "8123", false);
-//p1 = new HumanPlayer("Human 1")
-//p1 = new RandomPlayer("Randomio");
-p2 = new RandomPlayer("Randomio II");
-// p2 = new QPlayer("Q-learning2");
-//p2 = new HumanPlayer("Human")
-var startNewGame = function(){
-	// new Server.GameManager(new Server.GameConfig("AI Truco Championship"), new RandomPlayer("Randomio"), p2);
-	new Server.GameManager(new Server.GameConfig("AI Truco Championship"), p1, p2);
-}
-
 /**
  * @Namespace
  */
@@ -1121,7 +1087,7 @@ var Server = new function () {
 		this.maxScore = 30;
 	}
 	
-	this.GameManager = function (config, playerHandler1, playerHandler2) {
+	this.GameManager = function (config, playerHandler1, playerHandler2, handleNextHand, recordMetric) {
 		
 		var _player1;
 		var _player2;
@@ -1208,8 +1174,8 @@ var Server = new function () {
 		var getGameName = function () {
 			return config.name + " - " + playerHandler1.getName() + " VS. " + playerHandler2.getName();
 		}
-
-		var nextHand = function () {
+		
+		var nextHandWrapped = function () {
 			Log.clear();
 			// temp
 			showLog();
@@ -1234,6 +1200,11 @@ var Server = new function () {
 			
 			setTimeout(gameLoop, config.playRate);
 		}
+
+		var nextHand = function () {
+			
+			handleNextHand(nextHandWrapped)
+		}
 		
 		var isMaxScore = function (max) {
 			return _player1.pointsEarned >= max || _player2.pointsEarned >= max;
@@ -1242,6 +1213,10 @@ var Server = new function () {
 		var sendGameData = function () {
 			var data = _gameHistory.get();
 			var loader = new HTTPLoader("http://aitruco.com.ar/add.php?p1="+_player1.handler.getName()+"&p2="+_player2.handler.getName(),"POST").load(_gameHistory.get());
+		}
+
+		var restartGame = function(){
+			new Server.GameManager(new Server.GameConfig("AI Truco Championship"), playerHandler1, playerHandler2, handleNextHand, recordMetric);
 		}
 		
 		var endGame = function () {
@@ -1254,11 +1229,10 @@ var Server = new function () {
 			}
 			clearInterval(_interval);
 			//sendGameData(); Anule el send
-			updateWinPlayer1(_player1.pointsEarned, _player2.pointsEarned);
+
+			recordMetric(playerHandler1.getName(), _player1.pointsEarned, playerHandler2.getName(), _player2.pointsEarned);
 			
-			var avgPointsWon = pointsWon.reduce(function(a, b) { return a + b; }) / pointsWon.length;
-			console.log("Player 1 wins " + getAverage(matchWins) + "% with average points :" + avgPointsWon);
-			startNewGame();
+			restartGame(); // Volvemos a empezar para que jueguen
 		}
 		
 		var receiveAction = function (action) {
@@ -1306,4 +1280,26 @@ var Server = new function () {
 	}
 }
 
-startNewGame();
+
+
+
+// Defino los jugadores globales para mantener el historico en los distintso partidos
+//p1 = new apiPlayer("Api Player", "8123", false);
+//p1 = new HumanPlayer("Human 1")
+//p1 = new RandomPlayer("Randomio");
+//p2 = new RandomPlayer("Randomio II");
+// p2 = new QPlayer("Q-learning2");
+//p2 = new HumanPlayer("Human")
+// new Tournament(...);
+
+
+var playerBuilders = [
+	// function(){ return new apiPlayer("Api Player", "8123", false)},
+	// function(){ return new apiPlayer("Api Player II", "8124", false)},
+	function(){ return new RandomPlayer("Randomio 1")},
+	function(){ return new RandomPlayer("Randomio 2")},
+	function(){ return new RandomPlayer("Randomio 3")},
+]
+
+
+t = new Tournament(playerBuilders);
