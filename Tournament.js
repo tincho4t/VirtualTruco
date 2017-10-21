@@ -75,13 +75,31 @@ function Tournament(playerBuilders){
 
 	this.init();
 
-	var logPlayerStatistics = function(playerName) {
+	var getPlayersVsDic = function() {
+		var playersVs = {};
+		for(var i = 0; i < _playersNames.length; i++) {
+			for(var j = i+1; j < _playersNames.length; j++) {
+				playersVs[[_playersNames[i],_playersNames[j]]] = 0;
+			}
+		}
+		return playersVs;
+	}
+
+	var logPlayerStatistics = function(playerName, min) {
 		var matchs = 0;
 		var points = 0;
 		var n = 0;
+		var playersVs = getPlayersVsDic();
 
-		for(var i in _gamesRecord){
+		for(var i = 0; i< _gamesRecord.length; i++){
 			var record = _gamesRecord[i];
+			var key = [record['playerName1'],record['playerName2']];
+			if(playersVs[key] >= min){
+				continue;
+			} else {
+				playersVs[key]++;
+			}
+
 			if(record['playerName1'] == playerName) {
 				n++;
 				points += record['playerPoints1'] - record['playerPoints2']
@@ -93,12 +111,30 @@ function Tournament(playerBuilders){
 			}
 		}
 		console.log(playerName + ": Matchs: " + matchs / n + " points: " + points / n + " n: " + n);
-	} 
+	}
+
+	var minOf = function(dic) {
+		return dic[Object.keys(dic).reduce(function(a, b){ return dic[a] > dic[b] ? b : a })]
+	}
+
+	var getMinimumMatchs = function() {
+		var playersVs = getPlayersVsDic();
+
+		for(var i= 0; i < _gamesRecord.length; i++) {
+			var record = _gamesRecord[i];
+			var key = [record['playerName1'], record['playerName2']];
+			playersVs[key]++;
+		}
+		return minOf(playersVs);
+	}
 
 	this.showStatistics = function (){
-		for(var pi in _playersNames){
+		var min = getMinimumMatchs();
+		for(var pi = 0; pi <_playersNames.length; pi++) {
 			var player = _playersNames[pi];
-			logPlayerStatistics(player);
+			logPlayerStatistics(player, min);
 		}
+
+
 	}
 }
