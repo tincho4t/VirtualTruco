@@ -1279,27 +1279,3 @@ var Server = new function () {
 		
 	}
 }
-
-
-
-
-// Defino los jugadores globales para mantener el historico en los distintso partidos
-//p1 = new apiPlayer("Api Player", "8123", false);
-//p1 = new HumanPlayer("Human 1")
-//p1 = new RandomPlayer("Randomio");
-//p2 = new RandomPlayer("Randomio II");
-// p2 = new QPlayer("Q-learning2");
-//p2 = new HumanPlayer("Human")
-// new Tournament(...);
-
-
-var playerBuilders = [
-	// function(){ return new apiPlayer("Api Player", "8123", false)},
-	// function(){ return new apiPlayer("Api Player II", "8124", false)},
-	function(){ return new RandomPlayer("Randomio 1")},
-	function(){ return new RandomPlayer("Randomio 2")},
-	function(){ return new RandomPlayer("Randomio 3")},
-]
-
-
-t = new Tournament(playerBuilders);

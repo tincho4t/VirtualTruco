@@ -1,5 +1,5 @@
 
-function Tournament(playerBuilders){
+function Tournament(playerBuilders, maxRecordUntilFinish = null){
 
 	this.playerBuilders = playerBuilders;
 
@@ -12,9 +12,15 @@ function Tournament(playerBuilders){
 	var _recordsMaxSize = 10000;
 
 	var _playersNames = new Array();
+ 
+	var _maxRecordUntilFinish = maxRecordUntilFinish; // Si seteas esta variable cuando llega a dicha cantidad corta y postea las metricas
 
 	this.realeaseTable = function() {
 		_tableIsFree = true;
+	}
+
+	this.pause = function() {
+		_tableIsFree = false;
 	}
 
 	var _buildRecord = function(playerName1, playerPoints1, playerName2, playerPoints2) {
@@ -26,20 +32,43 @@ function Tournament(playerBuilders){
 		}
 	}
 
+	var _postMetrics = function(){
+		var wins = 0;
+		for(var i=0; i < _gamesRecord.length; i++){
+			var record = _gamesRecord[i];
+			wins += record['playerPoints1'] > record['playerPoints2'];
+		}
+		var player1AverageWins = wins / _gamesRecord.length;
+
+		jQuery.ajax({
+            url: 'http://localhost:8300/',
+            type: "POST",
+            crossDomain: true,
+            contentType: "application/json; charset=utf-8",
+    		dataType: "json",
+            success: function (data) {
+		        // console.log("Training success");
+            },
+            data: JSON.stringify({'player_1_average_wins': player1AverageWins})
+        });
+		console.log("Player 1 gano: ", player1AverageWins);
+	}
+
 	this.recordMetric = function(playerName1, playerPoints1, playerName2, playerPoints2) {
 		_gamesRecord.unshift(_buildRecord(playerName1, playerPoints1, playerName2, playerPoints2)); // Agrego al comienzo
 		if(_gamesRecord.length > _recordsMaxSize){
 			_gamesRecord.pop(); // Saco el ultimo que es el mas viejo		
+		}
+
+		if(_maxRecordUntilFinish && _gamesRecord.length >= _maxRecordUntilFinish){
+			_postMetrics();
+			_tableIsFree = false;
 		}
 	}
 
 	var _play = function(){
 		var nextHandToPlay = _handsQueue.pop(); // Saco la mas vieja (ultima) para ejecutarla
 		nextHandToPlay(); 
-	}
-
-	this.pause = function() {
-		_tableIsFree = false;
 	}
 
 	this.resume = function() {
