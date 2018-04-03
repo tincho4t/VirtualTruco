@@ -41,7 +41,7 @@ function Tournament(playerBuilders, maxRecordUntilFinish = null){
 		var player1AverageWins = wins / _gamesRecord.length;
 
 		jQuery.ajax({
-            url: 'http://localhost:8300/',
+            url: 'http://localhost:8200/',
             type: "POST",
             crossDomain: true,
             contentType: "application/json; charset=utf-8",
