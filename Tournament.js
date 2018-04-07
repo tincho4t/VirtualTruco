@@ -47,7 +47,6 @@ function Tournament(playerBuilders, maxRecordUntilFinish = null){
             contentType: "application/json; charset=utf-8",
     		dataType: "json",
             success: function (data) {
-		        close(); // Cierro la ventana para terminar
 		        // console.log("Training success");
             },
             data: JSON.stringify({'player_1_average_wins': player1AverageWins})
