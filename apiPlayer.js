@@ -1,7 +1,7 @@
 /*
  * Api-Player
  */
-var apiPlayer = function (name, port, showCardsInTheBeginning=true) {
+var apiPlayer = function (name, port, showCardsInTheBeginning=true, dontTearn=false) {
 	CommonAPI.AbstractPlayer.call(this);
 
 	var _initialCardSet = [];
@@ -235,6 +235,8 @@ var apiPlayer = function (name, port, showCardsInTheBeginning=true) {
 	}
 
 	var putLearningInformation = function(points){
+		if(dontTearn) return; // No aprendo
+
 		if(_handHistory.hand_history.length < 1){
 			console.log("Truco envidado no aceptado");
  			// Simulo que cante truco.
