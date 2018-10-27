@@ -238,7 +238,7 @@ var apiPlayer = function (name, port, showCardsInTheBeginning=true, dontTearn=fa
 		if(dontTearn) return; // No aprendo
 
 		if(_handHistory.hand_history.length < 1){
-			console.log("Truco envidado no aceptado");
+			// console.log("Truco envidado no aceptado");
  			// Simulo que cante truco.
 			_handHistory.hand_history = [simulateSingTruco()];
 		}

@@ -32,13 +32,24 @@ function Tournament(playerBuilders, maxRecordUntilFinish = null){
 		}
 	}
 
+	var showStatistics = function(){
+		var min = getMinimumMatchs();
+		for(var pi = 0; pi <_playersNames.length; pi++) {
+			var player = _playersNames[pi];
+			logPlayerStatistics(player, min);
+		}
+	}
+
 	var _postMetrics = function(){
 		var wins = 0;
+		var points = 0;
 		for(var i=0; i < _gamesRecord.length; i++){
 			var record = _gamesRecord[i];
 			wins += record['playerPoints1'] > record['playerPoints2'];
+			points += record['playerPoints1'] - record['playerPoints2'];
 		}
 		var player1AverageWins = wins / _gamesRecord.length;
+		var player1AveragePoints = points / _gamesRecord.length;
 
 		jQuery.ajax({
             url: 'http://localhost:8200/',
@@ -49,9 +60,11 @@ function Tournament(playerBuilders, maxRecordUntilFinish = null){
             success: function (data) {
 		        // console.log("Training success");
             },
-            data: JSON.stringify({'player_1_average_wins': player1AverageWins})
+            data: JSON.stringify({'player_1_average_wins': player1AverageWins,
+        						  'player_1_average_points': player1AveragePoints})
         });
 		console.log("Player 1 gano: ", player1AverageWins);
+		console.log("Player 1 gano con puntos: ", player1AveragePoints);
 	}
 
 	this.recordMetric = function(playerName1, playerPoints1, playerName2, playerPoints2) {
@@ -63,6 +76,10 @@ function Tournament(playerBuilders, maxRecordUntilFinish = null){
 		if(_maxRecordUntilFinish && _gamesRecord.length >= _maxRecordUntilFinish){
 			_postMetrics();
 			_tableIsFree = false;
+		}
+
+		if(_gamesRecord.length % 50 == 0){
+			showStatistics();
 		}
 	}
 
@@ -157,13 +174,6 @@ function Tournament(playerBuilders, maxRecordUntilFinish = null){
 		return minOf(playersVs);
 	}
 
-	this.showStatistics = function (){
-		var min = getMinimumMatchs();
-		for(var pi = 0; pi <_playersNames.length; pi++) {
-			var player = _playersNames[pi];
-			logPlayerStatistics(player, min);
-		}
 
-
-	}
+	this.showStatistics = showStatistics();
 }
