@@ -4,4 +4,4 @@ var playerBuilders = [
 ]
 
 
-t = new Tournament(playerBuilders, 2000);
+t = new Tournament(playerBuilders, 550);

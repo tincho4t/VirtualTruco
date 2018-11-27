@@ -1279,3 +1279,5 @@ var Server = new function () {
 		
 	}
 }
+
+Log = LogOff
