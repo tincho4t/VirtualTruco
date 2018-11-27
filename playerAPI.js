@@ -91,6 +91,13 @@ var Log = new function () {
     }
 }
 
+var LogOff = new function () {
+    this.add = function (line) {}
+
+    this.save = function(p1,p2){}
+
+    this.clear = function() {}
+}
 
 /*
  * Utils
