@@ -1,5 +1,5 @@
 
-function Tournament(playerBuilders, maxRecordUntilFinish = null){
+function Tournament(playerBuilders, maxRecordUntilFinish = null, refreshAfterNGames = null){
 
 	this.playerBuilders = playerBuilders;
 
@@ -14,6 +14,8 @@ function Tournament(playerBuilders, maxRecordUntilFinish = null){
 	var _playersNames = new Array();
  
 	var _maxRecordUntilFinish = maxRecordUntilFinish; // Si seteas esta variable cuando llega a dicha cantidad corta y postea las metricas
+	
+	var _refreshAfterNGames = refreshAfterNGames; // Si seteas esta variable cuando llega a dicha cantidad refresca la pagina
 
 	this.realeaseTable = function() {
 		_tableIsFree = true;
@@ -80,6 +82,10 @@ function Tournament(playerBuilders, maxRecordUntilFinish = null){
 
 		if(_gamesRecord.length % 50 == 0){
 			showStatistics();
+		}
+
+		if(_refreshAfterNGames && _gamesRecord.length >= _refreshAfterNGames){
+			location.reload();
 		}
 	}
 

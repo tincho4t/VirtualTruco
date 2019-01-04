@@ -19,11 +19,13 @@ var playerBuilders = [
 	//function(){ return new apiPlayer("Api Player V", "8005", true)},
 	//function(){ return new HumanPlayer("Human 1")},
 	//function(){ return new HumanPlayer("Human 2")},
-	//function(){ return new RandomPlayer("Randomio")},
+	// function(){ return new RandomPlayer("Randomio")},
+	// function(){ return new RandomPlayer("Randomio II")},
+	// function(){ return new RandomPlayer("Randomio III")},
 ]
 
 
-t = new Tournament(playerBuilders);
+t = new Tournament(playerBuilders, null, 200);
 
 // stopLearn = function(port = 8000){
 // 	jQuery.ajax({
